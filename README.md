@@ -116,10 +116,86 @@ cd server
 npm test          # Jest + supertest, 50 tests, in-memory SQLite
 ```
 
-## Docker
+## Docker (local)
 
 ```bash
 docker-compose up --build
 ```
 
 App available at **http://localhost:5173**, API at **http://localhost:3001**.
+
+## Deploy on EC2
+
+### 1. Launch EC2
+- OS: Amazon Linux 2023 or Ubuntu 22.04
+- Instance type: t3.small or larger
+- **Security Group**: open inbound port **80** (HTTP) and **22** (SSH)
+
+### 2. Install Docker
+
+**Amazon Linux 2023:**
+```bash
+sudo dnf install -y docker
+sudo systemctl enable --now docker
+sudo usermod -aG docker ec2-user   # re-login after this
+```
+
+**Ubuntu:**
+```bash
+sudo apt-get update
+sudo apt-get install -y docker.io docker-compose
+sudo usermod -aG docker ubuntu     # re-login after this
+```
+
+Install Docker Compose plugin (if not bundled):
+```bash
+sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" \
+  -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+```
+
+### 3. Clone & configure
+
+```bash
+git clone https://github.com/ITSynnex/ITProjectManagement.git
+cd ITProjectManagement
+```
+
+Set a strong JWT secret:
+```bash
+export JWT_SECRET=your_strong_secret_here
+```
+
+Or create a `.env` file in the project root:
+```
+JWT_SECRET=your_strong_secret_here
+```
+
+### 4. Build & start
+
+```bash
+docker-compose up --build -d
+```
+
+### 5. Seed demo data (first time only)
+
+```bash
+docker-compose exec server node src/db/seed.js
+```
+
+### 6. Open the app
+
+```
+http://<your-ec2-public-ip>
+```
+
+> **Note:** The frontend and API both run through **port 80** via nginx reverse proxy — no need to open port 3001.
+
+### Managing the app
+
+```bash
+docker-compose logs -f        # view logs
+docker-compose down           # stop
+docker-compose up -d          # start again (data is preserved in Docker volume)
+docker-compose down -v        # stop + delete database
+```

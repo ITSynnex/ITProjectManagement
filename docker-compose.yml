@@ -9,7 +9,7 @@ services:
       PORT: 3001
       JWT_SECRET: ${JWT_SECRET:-changeme_in_production}
       NODE_ENV: production
-      CORS_ORIGIN: http://localhost:5173
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost}
     volumes:
       - db_data:/app/data
     ports:
