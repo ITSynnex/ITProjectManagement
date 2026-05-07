@@ -1,0 +1,35 @@
+version: '3.9'
+
+services:
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    environment:
+      PORT: 3001
+      JWT_SECRET: ${JWT_SECRET:-changeme_in_production}
+      NODE_ENV: production
+      CORS_ORIGIN: http://localhost:5173
+    volumes:
+      - db_data:/app/data
+    ports:
+      - "3001:3001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/auth/me"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE: http://localhost:3001
+    ports:
+      - "5173:80"
+    depends_on:
+      - server
+
+volumes:
+  db_data:
