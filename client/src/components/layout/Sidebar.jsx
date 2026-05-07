@@ -1,7 +1,7 @@
 import { NavLink, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
-  LayoutDashboard, FolderKanban, BarChart2, Users, Settings, ChevronDown,
+  LayoutDashboard, FolderKanban, Users, Settings, ChevronDown,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
@@ -13,6 +13,14 @@ const TEAM_COLORS = {
   INFRA:   { bg: '#FFF7ED', text: '#EA580C' },
   AI:      { bg: '#FDF4FF', text: '#9333EA' },
   PRODUCT: { bg: '#FFF1F2', text: '#E11D48' },
+};
+
+const GROUPS = ['บัญชี', 'กฎหมาย', 'Coolevtion'];
+
+const GROUP_COLORS = {
+  'บัญชี':      { bg: '#FFF7ED', text: '#C2410C' },
+  'กฎหมาย':    { bg: '#F0FDF4', text: '#15803D' },
+  'Coolevtion': { bg: '#EFF6FF', text: '#1D4ED8' },
 };
 
 const NavItem = ({ to, icon: Icon, label, end, onClick }) => (
@@ -40,14 +48,16 @@ const Sidebar = ({ open, onClose }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const activeTeam = searchParams.get('team');
+  const activeTeam  = searchParams.get('team');
+  const activeGroup = searchParams.get('group');
 
   const handleTeamClick = (team) => {
-    if (activeTeam === team) {
-      navigate('/plans');
-    } else {
-      navigate(`/plans?team=${team}`);
-    }
+    navigate(activeTeam === team ? '/plans' : `/plans?team=${team}`);
+    onClose?.();
+  };
+
+  const handleGroupClick = (group) => {
+    navigate(activeGroup === group ? '/plans' : `/plans?group=${encodeURIComponent(group)}`);
     onClose?.();
   };
 
@@ -92,11 +102,10 @@ const Sidebar = ({ open, onClose }) => {
               <ChevronDown className="w-3 h-3 text-[#9CA3AF]" />
               <span className="text-[11px] font-semibold uppercase tracking-wider text-[#9CA3AF]">Teams</span>
             </div>
-
             <div className="space-y-0.5">
               {TEAMS.map(team => {
                 const isActive = activeTeam === team;
-                const colors = TEAM_COLORS[team];
+                const colors   = TEAM_COLORS[team];
                 return (
                   <button
                     key={team}
@@ -119,6 +128,43 @@ const Sidebar = ({ open, onClose }) => {
               })}
             </div>
           </div>
+
+          {/* Separator */}
+          <div className="my-2 border-t border-[#E8E6E0]" />
+
+          {/* Groups section */}
+          <div>
+            <div className="flex items-center gap-1.5 px-3 py-1 mb-1">
+              <ChevronDown className="w-3 h-3 text-[#9CA3AF]" />
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#9CA3AF]">Groups</span>
+            </div>
+            <div className="space-y-0.5">
+              {GROUPS.map(group => {
+                const isActive = activeGroup === group;
+                const colors   = GROUP_COLORS[group] ?? { bg: '#F3F4F6', text: '#6B7280' };
+                return (
+                  <button
+                    key={group}
+                    onClick={() => handleGroupClick(group)}
+                    className={cn(
+                      'flex items-center gap-2.5 w-full px-3 py-1.5 rounded-md text-sm transition-colors text-left',
+                      isActive ? 'font-medium' : 'text-[#374151] hover:bg-[#F3F2EF]'
+                    )}
+                    style={isActive ? { backgroundColor: colors.bg, color: colors.text } : {}}
+                  >
+                    <span
+                      className="w-5 h-5 rounded text-[10px] font-bold flex items-center justify-center flex-shrink-0"
+                      style={{ backgroundColor: colors.bg, color: colors.text }}
+                    >
+                      {[...group][0]}
+                    </span>
+                    <span className="flex-1 truncate text-[13px]">{group}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
         </nav>
 
         {/* Settings footer */}

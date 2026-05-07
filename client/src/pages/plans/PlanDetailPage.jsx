@@ -21,12 +21,17 @@ import {
   CheckCircle2, Clock, AlertTriangle, TrendingUp,
   Filter, Users as UsersIcon,
 } from 'lucide-react';
+import GanttProjectView from '../../components/gantt/GanttProjectView';
 import { cn } from '../../lib/utils';
 
 const PLAN_STATUS_CONFIG = {
-  on_track: { variant: 'on_track', label: 'On Track' },
-  at_risk:  { variant: 'at_risk',  label: 'At Risk' },
-  closed:   { variant: 'closed',   label: 'Closed' },
+  on_track:    { variant: 'on_track',    label: 'On Track' },
+  at_risk:     { variant: 'at_risk',     label: 'At Risk' },
+  closed:      { variant: 'closed',      label: 'Closed' },
+  not_started: { variant: 'not_started', label: 'Not Started' },
+  ongoing:     { variant: 'ongoing',     label: 'Ongoing' },
+  completed:   { variant: 'completed',   label: 'Completed' },
+  suspended:   { variant: 'suspended',   label: 'Suspended' },
 };
 
 const FILTER_TABS = [
@@ -414,7 +419,7 @@ const PlanDetailPage = () => {
 
         {/* ── Reports tab ── */}
         {detailTab === 'Reports' && (
-          <div className="max-w-2xl space-y-6">
+          <div className="space-y-6">
             <h2 className="text-[13px] font-semibold text-[#374151]">Task Summary</h2>
 
             <div className="grid grid-cols-3 gap-4">
@@ -432,31 +437,39 @@ const PlanDetailPage = () => {
               ))}
             </div>
 
-            <Card>
-              <CardHeader><CardTitle>Progress by bucket</CardTitle></CardHeader>
-              <CardContent>
-                {buckets.length === 0 ? (
-                  <p className="text-[12px] text-[#9CA3AF]">No buckets defined.</p>
-                ) : (
-                  <div className="space-y-4">
-                    {buckets.map(b => {
-                      const bTasks = tasks.filter(t => t.bucket_id === b.id);
-                      const done   = bTasks.filter(t => effectiveStatus(t) === 'completed').length;
-                      const pct    = bTasks.length ? Math.round((done / bTasks.length) * 100) : 0;
-                      return (
-                        <div key={b.id}>
-                          <div className="flex justify-between text-[12px] mb-1.5">
-                            <span className="font-medium text-[#374151]">{b.name}</span>
-                            <span className="text-[#9CA3AF]">{done}/{bTasks.length}</span>
+            <div className="max-w-2xl">
+              <Card>
+                <CardHeader><CardTitle>Progress by bucket</CardTitle></CardHeader>
+                <CardContent>
+                  {buckets.length === 0 ? (
+                    <p className="text-[12px] text-[#9CA3AF]">No buckets defined.</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {buckets.map(b => {
+                        const bTasks = tasks.filter(t => t.bucket_id === b.id);
+                        const done   = bTasks.filter(t => effectiveStatus(t) === 'completed').length;
+                        const pct    = bTasks.length ? Math.round((done / bTasks.length) * 100) : 0;
+                        return (
+                          <div key={b.id}>
+                            <div className="flex justify-between text-[12px] mb-1.5">
+                              <span className="font-medium text-[#374151]">{b.name}</span>
+                              <span className="text-[#9CA3AF]">{done}/{bTasks.length}</span>
+                            </div>
+                            <Progress value={pct} />
                           </div>
-                          <Progress value={pct} />
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                        );
+                      })}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Gantt chart */}
+            <div>
+              <h2 className="text-[13px] font-semibold text-[#374151] mb-4">Gantt chart</h2>
+              <GanttProjectView plan={plan} tasks={tasks} buckets={buckets} />
+            </div>
           </div>
         )}
       </div>

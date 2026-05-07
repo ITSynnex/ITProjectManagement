@@ -10,7 +10,8 @@ const recalcProgress = (planId) => {
 
 const list = () =>
   db.prepare(`
-    SELECT p.*, u.display_name as owner_name, u.avatar_url as owner_avatar
+    SELECT p.*, u.display_name as owner_name, u.avatar_url as owner_avatar,
+      (SELECT b.name FROM buckets b WHERE b.plan_id = p.id ORDER BY b."order" ASC LIMIT 1) as current_bucket
     FROM plans p
     JOIN users u ON u.id = p.owner_id
     ORDER BY p.created_at DESC
@@ -68,4 +69,14 @@ const remove = (id) => {
   return true;
 };
 
-module.exports = { list, getById, create, update, remove, recalcProgress };
+const listWithTasks = () => {
+  const plans = list();
+  return plans.map(plan => ({
+    ...plan,
+    tasks: db.prepare(
+      'SELECT * FROM tasks WHERE plan_id = ? ORDER BY "order" ASC'
+    ).all(plan.id),
+  }));
+};
+
+module.exports = { list, listWithTasks, getById, create, update, remove, recalcProgress };

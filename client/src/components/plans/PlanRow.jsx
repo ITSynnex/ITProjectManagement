@@ -13,7 +13,7 @@ const TEAM_COLORS = {
   PRODUCT: { bg: '#FFF1F2', text: '#E11D48' },
 };
 
-const PlanRow = ({ plan, onEdit, onDelete, canEdit }) => {
+const PlanRow = ({ plan, index, onEdit, onDelete, canEdit }) => {
   const teamColors = plan.team ? (TEAM_COLORS[plan.team] ?? { bg: '#F3F4F6', text: '#6B7280' }) : null;
 
   return (
@@ -23,6 +23,7 @@ const PlanRow = ({ plan, onEdit, onDelete, canEdit }) => {
       onMouseEnter={e => e.currentTarget.style.backgroundColor = '#F7F6F3'}
       onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
     >
+      <td className="px-4 py-3.5 text-[11px] font-mono text-[#9CA3AF] w-8 select-none">{index}</td>
       <td className="px-4 py-3.5">
         <Link
           to={`/plans/${plan.id}`}
@@ -68,6 +69,16 @@ const PlanRow = ({ plan, onEdit, onDelete, canEdit }) => {
 
       <td className="px-4 py-3.5">
         <StatusBadge status={plan.status} />
+      </td>
+
+      <td className="px-4 py-3.5">
+        {plan.current_bucket ? (
+          <span className="text-[12px] text-[#374151] bg-[#F3F4F6] px-2 py-0.5 rounded">
+            {plan.current_bucket}
+          </span>
+        ) : (
+          <span className="text-sm text-[#D1D5DB]">—</span>
+        )}
       </td>
 
       {canEdit && (

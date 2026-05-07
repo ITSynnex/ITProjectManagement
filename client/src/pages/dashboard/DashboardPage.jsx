@@ -3,17 +3,29 @@ import { useSearchParams } from 'react-router-dom';
 import { getPlans, createPlan, updatePlan, deletePlan } from '../../api/plans.api';
 import PlanForm from '../../components/plans/PlanForm';
 import PlanRow from '../../components/plans/PlanRow';
+import ViewByOwner from '../../components/plans/ViewByOwner';
+import ViewByStatus from '../../components/plans/ViewByStatus';
+import GanttOverview from '../../components/gantt/GanttOverview';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import Spinner from '../../components/common/Spinner';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { useAuth } from '../../context/AuthContext';
 import { Plus, FolderKanban, Search } from 'lucide-react';
+import { cn } from '../../lib/utils';
+
+const DASHBOARD_TABS = [
+  { key: 'all',      label: 'All Projects' },
+  { key: 'by_owner', label: 'View by Owner' },
+  { key: 'by_status',label: 'View by Status' },
+  { key: 'gantt',    label: 'Gantt chart' },
+];
 
 const DashboardPage = () => {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
-  const teamFilter = searchParams.get('team');
+  const teamFilter  = searchParams.get('team');
+  const groupFilter = searchParams.get('group');
 
   const [plans, setPlans]               = useState([]);
   const [loading, setLoading]           = useState(true);
@@ -22,6 +34,7 @@ const DashboardPage = () => {
   const [editTarget, setEditTarget]     = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [search, setSearch]             = useState('');
+  const [activeTab, setActiveTab]       = useState('all');
 
   const canEdit = user?.role === 'it_manager' || user?.role === 'pmo';
 
@@ -60,14 +73,24 @@ const DashboardPage = () => {
     filtered = filtered.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
   }
 
-  const title = teamFilter ? `${teamFilter} Projects` : 'Projects';
+  const title = teamFilter
+    ? `${teamFilter} Projects`
+    : groupFilter
+    ? `${groupFilter} Projects`
+    : 'Projects';
+
+  const commonProps = {
+    canEdit,
+    onEdit: p => { setEditTarget(p); setShowForm(true); },
+    onDelete: setDeleteTarget,
+  };
 
   return (
     <div className="flex flex-col h-full min-h-0">
 
       {/* ── Page Header ── */}
-      <div className="bg-white border-b border-[#E8E6E0] px-6 py-5 flex-shrink-0">
-        <div className="flex items-center justify-between">
+      <div className="bg-white border-b border-[#E8E6E0] px-6 pt-5 pb-0 flex-shrink-0">
+        <div className="flex items-center justify-between pb-4">
           <div>
             <h1 className="text-2xl font-semibold text-[#1A1A1A]">{title}</h1>
             <p className="text-[13px] text-[#6B7280] mt-0.5">
@@ -79,6 +102,24 @@ const DashboardPage = () => {
               <Plus className="w-3.5 h-3.5 mr-1.5" /> New Project
             </Button>
           )}
+        </div>
+
+        {/* Tab bar */}
+        <div className="flex gap-0">
+          {DASHBOARD_TABS.map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={cn(
+                'px-4 py-2.5 text-[13px] font-medium border-b-2 transition-colors duration-100',
+                activeTab === tab.key
+                  ? 'border-[#4F46E5] text-[#4F46E5]'
+                  : 'border-transparent text-[#6B7280] hover:text-[#1A1A1A]'
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -109,53 +150,72 @@ const DashboardPage = () => {
             )}
           </div>
         ) : (
-          <div className="space-y-4">
-            {/* Search bar */}
-            <div className="relative w-72">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#9CA3AF] pointer-events-none" />
-              <Input
-                placeholder="Search projects…"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                className="pl-8"
-              />
-            </div>
-
-            {/* Table */}
-            <div className="bg-white rounded-xl border border-[#E8E6E0] overflow-hidden"
-              style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-              <table className="w-full">
-                <thead>
-                  <tr style={{ backgroundColor: '#FAFAF8', borderBottom: '1px solid #E8E6E0' }}>
-                    {['Project Name', 'Team', 'Owner', 'Progress', 'Start', 'End', 'Status'].map(h => (
-                      <th key={h} className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-[#9CA3AF]">
-                        {h}
-                      </th>
-                    ))}
-                    {canEdit && <th className="px-4 py-3 w-20" />}
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map(plan => (
-                    <PlanRow
-                      key={plan.id}
-                      plan={plan}
-                      canEdit={canEdit}
-                      onEdit={p => { setEditTarget(p); setShowForm(true); }}
-                      onDelete={setDeleteTarget}
-                    />
-                  ))}
-                </tbody>
-              </table>
-              {filtered.length === 0 && (
-                <div className="text-center py-10 text-[13px] text-[#9CA3AF]">
-                  {search
-                    ? `No projects match "${search}"`
-                    : `No projects in team ${teamFilter}`}
+          <>
+            {/* ── All Projects tab ── */}
+            {activeTab === 'all' && (
+              <div className="space-y-4">
+                <div className="relative w-72">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#9CA3AF] pointer-events-none" />
+                  <Input
+                    placeholder="Search projects…"
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    className="pl-8"
+                  />
                 </div>
-              )}
-            </div>
-          </div>
+
+                <div className="bg-white rounded-xl border border-[#E8E6E0] overflow-hidden"
+                  style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                  <table className="w-full">
+                    <thead>
+                      <tr style={{ backgroundColor: '#FAFAF8', borderBottom: '1px solid #E8E6E0' }}>
+                        {['#', 'Project Name', 'Team', 'Owner', 'Progress', 'Start', 'End', 'Status', 'Bucket'].map(h => (
+                          <th key={h} className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-[#9CA3AF]">
+                            {h}
+                          </th>
+                        ))}
+                        {canEdit && <th className="px-4 py-3 w-20" />}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filtered.map((plan, idx) => (
+                        <PlanRow
+                          key={plan.id}
+                          plan={plan}
+                          index={idx + 1}
+                          canEdit={canEdit}
+                          onEdit={p => { setEditTarget(p); setShowForm(true); }}
+                          onDelete={setDeleteTarget}
+                        />
+                      ))}
+                    </tbody>
+                  </table>
+                  {filtered.length === 0 && (
+                    <div className="text-center py-10 text-[13px] text-[#9CA3AF]">
+                      {search
+                        ? `No projects match "${search}"`
+                        : `No projects in team ${teamFilter}`}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ── View by Owner tab ── */}
+            {activeTab === 'by_owner' && (
+              <ViewByOwner plans={filtered} {...commonProps} />
+            )}
+
+            {/* ── View by Status tab ── */}
+            {activeTab === 'by_status' && (
+              <ViewByStatus plans={filtered} {...commonProps} />
+            )}
+
+            {/* ── Gantt chart tab ── */}
+            {activeTab === 'gantt' && (
+              <GanttOverview />
+            )}
+          </>
         )}
       </div>
 

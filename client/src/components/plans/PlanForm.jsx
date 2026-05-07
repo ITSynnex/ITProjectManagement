@@ -4,8 +4,16 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 
 const TEAMS    = ['DEV1', 'DEV2', 'INFRA', 'AI', 'PRODUCT'];
-const STATUSES = ['on_track', 'at_risk', 'closed'];
-const STATUS_LABELS = { on_track: 'On Track', at_risk: 'At Risk', closed: 'Closed' };
+const STATUSES = ['not_started', 'ongoing', 'completed', 'suspended', 'on_track', 'at_risk', 'closed'];
+const STATUS_LABELS = {
+  not_started: 'Not Started',
+  ongoing:     'Ongoing',
+  completed:   'Completed',
+  suspended:   'Suspended',
+  on_track:    'On Track',
+  at_risk:     'At Risk',
+  closed:      'Closed',
+};
 
 const empty = { name: '', team: '', start_date: '', end_date: '', status: '' };
 

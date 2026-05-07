@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS plans (
   progress   INTEGER NOT NULL DEFAULT 0 CHECK(progress BETWEEN 0 AND 100),
   start_date TEXT,
   end_date   TEXT,
-  status     TEXT CHECK(status IN ('on_track','at_risk','closed')),
+  status     TEXT CHECK(status IN ('on_track','at_risk','closed','not_started','ongoing','completed','suspended')),
   created_at TEXT DEFAULT (datetime('now'))
 );
 

@@ -1,6 +1,7 @@
 const plansService = require('./plans.service');
 
-const list    = (req, res) => res.json(plansService.list());
+const list        = (req, res) => res.json(plansService.list());
+const listGantt   = (req, res) => res.json(plansService.listWithTasks());
 
 const getById = (req, res) => {
   const plan = plansService.getById(Number(req.params.id));
@@ -24,4 +25,4 @@ const remove  = (req, res) => {
   res.status(204).end();
 };
 
-module.exports = { list, getById, create, update, remove };
+module.exports = { list, listGantt, getById, create, update, remove };
