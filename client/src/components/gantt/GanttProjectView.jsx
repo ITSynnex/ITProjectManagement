@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Gantt } from 'gantt-task-react';
-import 'gantt-task-react/dist/index.css';
+import GanttChart from './GanttChart';
 import { Calendar } from 'lucide-react';
 
 const parseDate = (str, fallback) => {
@@ -15,14 +14,12 @@ const GanttProjectView = ({ plan, tasks, buckets }) => {
   const [viewMode, setViewMode] = useState('Month');
 
   const planStart = parseDate(plan?.start_date, new Date());
-  const planEnd   = parseDate(plan?.end_date,   new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
+  const planEnd   = parseDate(plan?.end_date, new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
 
   const ganttTasks = useMemo(() => {
     const result = [];
 
-    const bucketsWithTasks = buckets.filter(b =>
-      tasks.some(t => t.bucket_id === b.id)
-    );
+    const bucketsWithTasks = buckets.filter(b => tasks.some(t => t.bucket_id === b.id));
 
     bucketsWithTasks.forEach(bucket => {
       const bTasks = tasks.filter(t => t.bucket_id === bucket.id);
@@ -34,23 +31,23 @@ const GanttProjectView = ({ plan, tasks, buckets }) => {
         const d = parseDate(t.finish_date, planEnd);
         return d > max ? d : max;
       }, planStart);
-      const safeBEnd = bEnd > bStart ? bEnd : new Date(bStart.getTime() + 24 * 60 * 60 * 1000);
+      const safeBEnd = bEnd > bStart ? bEnd : new Date(bStart.getTime() + 86400000);
 
       result.push({
-        id:       `bucket-${bucket.id}`,
-        name:     bucket.name,
-        start:    bStart,
-        end:      safeBEnd,
+        id:    `bucket-${bucket.id}`,
+        name:  bucket.name,
+        start: bStart,
+        end:   safeBEnd,
         progress: 0,
-        type:     'project',
+        type: 'project',
         hideChildren: false,
-        styles: { progressColor: '#4F46E5', progressSelectedColor: '#4338CA' },
+        styles: { progressColor: '#4F46E5' },
       });
 
       bTasks.forEach(t => {
         const ts = parseDate(t.start_date, planStart);
         const te = parseDate(t.finish_date, planEnd);
-        const safeTE = te > ts ? te : new Date(ts.getTime() + 24 * 60 * 60 * 1000);
+        const safeTE = te > ts ? te : new Date(ts.getTime() + 86400000);
         result.push({
           id:       `task-${t.id}`,
           name:     t.name,
@@ -59,17 +56,15 @@ const GanttProjectView = ({ plan, tasks, buckets }) => {
           progress: t.is_completed ? 100 : (t.progress ?? 0),
           type:     'task',
           project:  `bucket-${bucket.id}`,
-          styles: { progressColor: '#22C55E', progressSelectedColor: '#16A34A' },
+          styles:   { progressColor: '#22C55E' },
         });
       });
     });
 
-    // Tasks not in any bucket
-    const unbucketedTasks = tasks.filter(t => !t.bucket_id);
-    unbucketedTasks.forEach(t => {
+    tasks.filter(t => !t.bucket_id).forEach(t => {
       const ts = parseDate(t.start_date, planStart);
       const te = parseDate(t.finish_date, planEnd);
-      const safeTE = te > ts ? te : new Date(ts.getTime() + 24 * 60 * 60 * 1000);
+      const safeTE = te > ts ? te : new Date(ts.getTime() + 86400000);
       result.push({
         id:       `task-${t.id}`,
         name:     t.name,
@@ -77,7 +72,7 @@ const GanttProjectView = ({ plan, tasks, buckets }) => {
         end:      safeTE,
         progress: t.is_completed ? 100 : (t.progress ?? 0),
         type:     'task',
-        styles: { progressColor: '#22C55E', progressSelectedColor: '#16A34A' },
+        styles:   { progressColor: '#22C55E' },
       });
     });
 
@@ -96,7 +91,6 @@ const GanttProjectView = ({ plan, tasks, buckets }) => {
 
   return (
     <div className="space-y-4">
-      {/* View mode selector */}
       <div className="flex items-center gap-2">
         <span className="text-[12px] text-[#6B7280]">View:</span>
         {VIEW_MODES.map(m => (
@@ -116,12 +110,10 @@ const GanttProjectView = ({ plan, tasks, buckets }) => {
 
       <div className="bg-white rounded-xl border border-[#E8E6E0] overflow-hidden"
         style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-        <Gantt
+        <GanttChart
           tasks={ganttTasks}
           viewMode={viewMode}
-          listCellWidth="200px"
-          columnWidth={viewMode === 'Day' ? 40 : viewMode === 'Week' ? 80 : 120}
-          ganttHeight={Math.min(500, ganttTasks.length * 50 + 60)}
+          ganttHeight={Math.min(500, ganttTasks.length * 40 + 60)}
         />
       </div>
     </div>

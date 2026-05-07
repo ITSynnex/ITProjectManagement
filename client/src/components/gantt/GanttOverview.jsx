@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Gantt } from 'gantt-task-react';
-import 'gantt-task-react/dist/index.css';
+import GanttChart from './GanttChart';
 import { getPlansGantt } from '../../api/plans.api';
 import Spinner from '../common/Spinner';
 import { Calendar } from 'lucide-react';
@@ -18,8 +17,8 @@ const buildTasks = (plans, collapsedSet) => {
   const tasks = [];
   plans.forEach(plan => {
     const start = parseDate(plan.start_date, DEFAULT_START);
-    const end   = parseDate(plan.end_date,   new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000));
-    const safeEnd = end > start ? end : new Date(start.getTime() + 24 * 60 * 60 * 1000);
+    const end   = parseDate(plan.end_date, new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000));
+    const safeEnd = end > start ? end : new Date(start.getTime() + 86400000);
 
     tasks.push({
       id:           `plan-${plan.id}`,
@@ -29,14 +28,14 @@ const buildTasks = (plans, collapsedSet) => {
       progress:     plan.progress ?? 0,
       type:         'project',
       hideChildren: collapsedSet.has(plan.id),
-      styles: { progressColor: '#4F46E5', progressSelectedColor: '#4338CA' },
+      styles: { progressColor: '#4F46E5' },
     });
 
     if (!collapsedSet.has(plan.id) && Array.isArray(plan.tasks)) {
       plan.tasks.forEach(t => {
         const ts = parseDate(t.start_date, start);
         const te = parseDate(t.finish_date, safeEnd);
-        const safeTE = te > ts ? te : new Date(ts.getTime() + 24 * 60 * 60 * 1000);
+        const safeTE = te > ts ? te : new Date(ts.getTime() + 86400000);
         tasks.push({
           id:       `task-${t.id}`,
           name:     t.name,
@@ -45,7 +44,7 @@ const buildTasks = (plans, collapsedSet) => {
           progress: t.is_completed ? 100 : (t.progress ?? 0),
           type:     'task',
           project:  `plan-${plan.id}`,
-          styles: { progressColor: '#22C55E', progressSelectedColor: '#16A34A' },
+          styles: { progressColor: '#22C55E' },
         });
       });
     }
@@ -56,11 +55,11 @@ const buildTasks = (plans, collapsedSet) => {
 const VIEW_MODES = ['Day', 'Week', 'Month', 'Quarter', 'Year'];
 
 const GanttOverview = () => {
-  const [plans, setPlans]       = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState('');
+  const [plans, setPlans]         = useState([]);
+  const [loading, setLoading]     = useState(true);
+  const [error, setError]         = useState('');
   const [collapsed, setCollapsed] = useState(new Set());
-  const [viewMode, setViewMode] = useState('Month');
+  const [viewMode, setViewMode]   = useState('Month');
 
   useEffect(() => {
     getPlansGantt()
@@ -69,19 +68,9 @@ const GanttOverview = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  const plansWithDates = useMemo(
-    () => plans.filter(p => p.start_date && p.end_date),
-    [plans]
-  );
-  const plansNoDates = useMemo(
-    () => plans.filter(p => !p.start_date || !p.end_date),
-    [plans]
-  );
-
-  const tasks = useMemo(
-    () => buildTasks(plansWithDates, collapsed),
-    [plansWithDates, collapsed]
-  );
+  const plansWithDates = useMemo(() => plans.filter(p => p.start_date && p.end_date), [plans]);
+  const plansNoDates   = useMemo(() => plans.filter(p => !p.start_date || !p.end_date), [plans]);
+  const tasks = useMemo(() => buildTasks(plansWithDates, collapsed), [plansWithDates, collapsed]);
 
   const handleExpanderClick = (task) => {
     const id = Number(task.id.replace('plan-', ''));
@@ -97,7 +86,6 @@ const GanttOverview = () => {
 
   return (
     <div className="space-y-4">
-      {/* View mode selector */}
       <div className="flex items-center gap-2">
         <span className="text-[12px] text-[#6B7280]">View:</span>
         {VIEW_MODES.map(m => (
@@ -115,7 +103,6 @@ const GanttOverview = () => {
         ))}
       </div>
 
-      {/* Plans without dates notice */}
       {plansNoDates.length > 0 && (
         <div className="flex items-center gap-2 text-[12px] text-[#9CA3AF] bg-[#FAFAF8] border border-[#E8E6E0] rounded-lg px-4 py-2">
           <Calendar className="w-3.5 h-3.5" />
@@ -124,17 +111,14 @@ const GanttOverview = () => {
         </div>
       )}
 
-      {/* Gantt */}
       {tasks.length > 0 ? (
         <div className="bg-white rounded-xl border border-[#E8E6E0] overflow-hidden"
           style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-          <Gantt
+          <GanttChart
             tasks={tasks}
             viewMode={viewMode}
             onExpanderClick={handleExpanderClick}
-            listCellWidth="200px"
-            columnWidth={viewMode === 'Day' ? 40 : viewMode === 'Week' ? 80 : viewMode === 'Month' ? 120 : 200}
-            ganttHeight={Math.min(600, tasks.length * 50 + 60)}
+            ganttHeight={Math.min(600, tasks.length * 40 + 60)}
           />
         </div>
       ) : (
