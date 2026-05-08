@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors    = require('cors');
+const path    = require('path');
 
 const authRoutes        = require('./modules/auth/auth.routes');
 const usersRoutes       = require('./modules/users/users.routes');
@@ -30,6 +31,14 @@ app.use('/api/plans', plansNested);
 
 // Standalone task routes: /api/tasks/:id
 app.use('/api/tasks', tasksRoutes.standalone);
+
+// Return 404 JSON for unmatched /api/* routes so they don't fall through to the SPA
+app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }));
+
+// Serve built frontend and handle React Router paths
+const publicDir = path.join(__dirname, '../public');
+app.use(express.static(publicDir));
+app.get('/{*path}', (req, res) => res.sendFile(path.join(publicDir, 'index.html')));
 
 app.use(errorHandler);
 
