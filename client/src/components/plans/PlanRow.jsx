@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import StatusBadge from '../common/StatusBadge';
 import ProgressBar from '../common/ProgressBar';
+import { Badge } from '../ui/badge';
 import { formatDate } from '../../utils/formatDate';
 import { Pencil, Trash2 } from 'lucide-react';
 
@@ -10,6 +11,17 @@ const TEAM_COLORS = {
   INFRA:   { bg: '#FFF7ED', text: '#EA580C' },
   AI:      { bg: '#FDF4FF', text: '#9333EA' },
   PRODUCT: { bg: '#FFF1F2', text: '#E11D48' },
+};
+
+const PRIORITY_VARIANT = {
+  low:      'priority_low',
+  medium:   'priority_medium',
+  high:     'priority_high',
+  critical: 'priority_critical',
+};
+
+const PRIORITY_LABEL = {
+  low: 'Low', medium: 'Medium', high: 'High', critical: 'Critical',
 };
 
 const PlanRow = ({ plan, index, onEdit, onDelete, canEdit }) => {
@@ -68,12 +80,12 @@ const PlanRow = ({ plan, index, onEdit, onDelete, canEdit }) => {
       </td>
 
       <td className="px-4 py-3.5">
-        {plan.current_bucket ? (
-          <span className="text-[12px] text-[#374151] bg-[#F3F4F6] px-2 py-0.5 rounded">
-            {plan.current_bucket}
-          </span>
+        {plan.priority ? (
+          <Badge variant={PRIORITY_VARIANT[plan.priority]}>
+            {PRIORITY_LABEL[plan.priority]}
+          </Badge>
         ) : (
-          <span className="text-sm text-[#D1D5DB]">—</span>
+          <span className="text-sm" style={{ color: '#D1D5DB' }}>—</span>
         )}
       </td>
 

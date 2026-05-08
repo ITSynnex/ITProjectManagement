@@ -45,11 +45,11 @@ const getById = (id) => {
 };
 
 const create = (data, userId) => {
-  const { name, team, start_date, end_date, status, owner_id, department_id, operator_id } = data;
+  const { name, team, start_date, end_date, status, owner_id, department_id, operator_id, priority } = data;
   const resolvedOwner = owner_id || userId;
   const result = db.prepare(
-    'INSERT INTO plans (name, team, owner_id, start_date, end_date, status, department_id, operator_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-  ).run(name, team || null, resolvedOwner, start_date || null, end_date || null, status || null, department_id || null, operator_id || null);
+    'INSERT INTO plans (name, team, owner_id, start_date, end_date, status, department_id, operator_id, priority) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+  ).run(name, team || null, resolvedOwner, start_date || null, end_date || null, status || null, department_id || null, operator_id || null, priority || null);
   return db.prepare(`
     SELECT p.*, u.display_name as owner_name, u.avatar_url as owner_avatar,
       d.name as department_name,
@@ -64,7 +64,7 @@ const create = (data, userId) => {
 const update = (id, data) => {
   const plan = db.prepare('SELECT id FROM plans WHERE id = ?').get(id);
   if (!plan) return null;
-  const fields = ['name','team','owner_id','progress','start_date','end_date','status','department_id','operator_id'].filter(f => data[f] !== undefined);
+  const fields = ['name','team','owner_id','progress','start_date','end_date','status','department_id','operator_id','priority'].filter(f => data[f] !== undefined);
   if (fields.length) {
     const sql = `UPDATE plans SET ${fields.map(f => `${f} = ?`).join(', ')} WHERE id = ?`;
     db.prepare(sql).run(...fields.map(f => data[f]), id);

@@ -2,6 +2,14 @@ import { useState, useEffect } from 'react';
 import Modal from '../common/Modal';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
+import { cn } from '../../lib/utils';
+
+const PRIORITIES = [
+  { value: 'low',      label: 'Low',      active: 'bg-blue-50 text-blue-700 border-blue-400',   dot: 'bg-blue-400' },
+  { value: 'medium',   label: 'Medium',   active: 'bg-yellow-50 text-yellow-700 border-yellow-400', dot: 'bg-yellow-400' },
+  { value: 'high',     label: 'High',     active: 'bg-orange-50 text-orange-700 border-orange-400', dot: 'bg-orange-400' },
+  { value: 'critical', label: 'Critical', active: 'bg-red-50 text-red-700 border-red-500',      dot: 'bg-red-500' },
+];
 
 const TEAMS    = ['DEV1', 'DEV2', 'INFRA', 'AI', 'PRODUCT'];
 const STATUSES = ['not_started', 'ongoing', 'completed', 'suspended', 'on_track', 'at_risk', 'closed'];
@@ -15,7 +23,7 @@ const STATUS_LABELS = {
   closed:      'Closed',
 };
 
-const empty = { name: '', team: '', operator_id: '', start_date: '', end_date: '', status: '', department_id: '' };
+const empty = { name: '', team: '', operator_id: '', start_date: '', end_date: '', status: '', department_id: '', priority: '' };
 
 const Label = ({ children, required }) => (
   <label className="block text-[13px] font-medium text-[#374151] mb-1.5">
@@ -37,6 +45,7 @@ const PlanForm = ({ open, onClose, onSave, initial, operators = [], departments 
       end_date:      initial.end_date      ?? '',
       status:        initial.status        ?? '',
       department_id: initial.department_id ?? '',
+      priority:      initial.priority      ?? '',
     } : empty);
     setError('');
   }, [open, initial]);
@@ -56,6 +65,7 @@ const PlanForm = ({ open, onClose, onSave, initial, operators = [], departments 
         team:          form.team          || null,
         status:        form.status        || null,
         department_id: form.department_id ? Number(form.department_id) : undefined,
+        priority:      form.priority || null,
       });
       onClose();
     } catch (err) {
@@ -85,6 +95,28 @@ const PlanForm = ({ open, onClose, onSave, initial, operators = [], departments 
               <option key={d.id} value={d.id}>{d.name}</option>
             ))}
           </select>
+        </div>
+
+        <div>
+          <Label>Priority</Label>
+          <div className="flex gap-2">
+            {PRIORITIES.map(p => (
+              <button
+                key={p.value}
+                type="button"
+                onClick={() => setForm(f => ({ ...f, priority: f.priority === p.value ? '' : p.value }))}
+                className={cn(
+                  'flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-[12px] font-medium border transition-colors',
+                  form.priority === p.value
+                    ? p.active
+                    : 'border-[#E8E6E0] text-[#6B7280] hover:bg-[#F3F2EF]'
+                )}
+              >
+                <span className={cn('w-2 h-2 rounded-full flex-shrink-0', form.priority === p.value ? p.dot : 'bg-[#D1D5DB]')} />
+                {p.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">

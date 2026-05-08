@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS plans (
   end_date   TEXT,
   status        TEXT CHECK(status IN ('on_track','at_risk','closed','not_started','ongoing','completed','suspended')),
   operator_id   INTEGER REFERENCES operators(id),
+  priority      TEXT CHECK(priority IN ('low','medium','high','critical')),
   created_at    TEXT DEFAULT (datetime('now'))
 );
 
