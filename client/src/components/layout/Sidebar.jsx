@@ -79,7 +79,7 @@ const Sidebar = ({ open, onClose }) => {
             <LayoutDashboard className="w-4 h-4 text-white" />
           </div>
           <div className="min-w-0">
-            <p className="text-[13px] font-semibold text-[#1A1A1A] truncate leading-tight">IT Workspace</p>
+            <p className="text-[13px] font-semibold text-[#1A1A1A] truncate leading-tight">Project Management</p>
             <p className="text-[11px] text-[#9CA3AF] leading-tight">Project Management</p>
           </div>
         </div>
