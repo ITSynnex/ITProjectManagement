@@ -43,11 +43,11 @@ const AssigneeAvatar = ({ name }) => {
 };
 
 /* ─── Task row ─── */
-const TaskRow = ({ task, rowNum, users, canEdit, onToggle, onUpdate, onDelete }) => {
+const TaskRow = ({ task, rowNum, operators, canEdit, onToggle, onUpdate, onDelete }) => {
   const status   = effectiveStatus(task);
   const cfg      = STATUS_CONFIG[status];
   const isOverdue = task.finish_date && task.finish_date < todayStr() && status !== 'completed';
-  const assigneeName = users.find(u => u.id === task.assigned_to)?.display_name;
+  const operatorName = task.operator_name ?? operators.find(o => o.id === task.assigned_operator_id)?.name;
 
   const upd = (field, value) => onUpdate(task.id, { [field]: value });
 
@@ -79,20 +79,20 @@ const TaskRow = ({ task, rowNum, users, canEdit, onToggle, onUpdate, onDelete })
         </span>
       </td>
 
-      {/* Assignee */}
-      <td className="px-2 py-2.5 w-12">
+      {/* Operator */}
+      <td className="px-2 py-2.5 w-28">
         {canEdit ? (
           <select
-            value={task.assigned_to ?? ''}
-            onChange={e => upd('assigned_to', e.target.value ? Number(e.target.value) : null)}
+            value={task.assigned_operator_id ?? ''}
+            onChange={e => upd('assigned_operator_id', e.target.value ? Number(e.target.value) : null)}
             className="appearance-none text-[11px] border-0 bg-transparent focus:ring-0 focus:outline-none cursor-pointer w-full text-[#374151]"
             style={{ maxWidth: '100%' }}
           >
             <option value="">—</option>
-            {users.map(u => <option key={u.id} value={u.id}>{u.display_name}</option>)}
+            {operators.map(op => <option key={op.id} value={op.id}>{op.name}</option>)}
           </select>
         ) : (
-          <AssigneeAvatar name={assigneeName} />
+          <AssigneeAvatar name={operatorName} />
         )}
       </td>
 
@@ -271,7 +271,7 @@ const AddTaskRow = ({ onAdd }) => {
 };
 
 /* ─── Main export ─── */
-const TaskTable = ({ tasks, buckets, users, canEdit, onToggle, onUpdate, onDelete, onAdd }) => {
+const TaskTable = ({ tasks, buckets, operators = [], canEdit, onToggle, onUpdate, onDelete, onAdd }) => {
   const [collapsed, setCollapsed] = useState({});
   const toggle = (s) => setCollapsed(c => ({ ...c, [s]: !c[s] }));
 
@@ -290,7 +290,7 @@ const TaskTable = ({ tasks, buckets, users, canEdit, onToggle, onUpdate, onDelet
             <th className="pl-4 pr-1 py-2.5 w-8" />
             <th className="px-1 py-2.5 w-7 text-[11px] font-semibold uppercase tracking-wider text-[#9CA3AF]">#</th>
             <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-[#9CA3AF]">Task Name</th>
-            <th className="px-2 py-2.5 w-12 text-[11px] font-semibold uppercase tracking-wider text-[#9CA3AF]">Who</th>
+            <th className="px-2 py-2.5 w-28 text-[11px] font-semibold uppercase tracking-wider text-[#9CA3AF]">Operator</th>
             <th className="px-2 py-2.5 w-28 text-[11px] font-semibold uppercase tracking-wider text-[#9CA3AF]">Status</th>
             <th className="px-2 py-2.5 w-32 text-[11px] font-semibold uppercase tracking-wider text-[#9CA3AF]">Progress</th>
             <th className="px-2 py-2.5 w-24 text-[11px] font-semibold uppercase tracking-wider text-[#9CA3AF]">Start</th>
@@ -319,7 +319,7 @@ const TaskTable = ({ tasks, buckets, users, canEdit, onToggle, onUpdate, onDelet
                       key={task.id}
                       task={task}
                       rowNum={counter}
-                      users={users}
+                      operators={operators}
                       canEdit={canEdit}
                       onToggle={onToggle}
                       onUpdate={onUpdate}

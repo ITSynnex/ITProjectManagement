@@ -4,10 +4,12 @@ const { recalcProgress } = require('../plans/plans.service');
 const taskWithAssignee = (id) =>
   db.prepare(`
     SELECT t.*, u.display_name as assignee_name, u.avatar_url as assignee_avatar,
-           b.name as bucket_name
+           b.name as bucket_name,
+           op.name as operator_name
     FROM tasks t
     LEFT JOIN users u ON u.id = t.assigned_to
     LEFT JOIN buckets b ON b.id = t.bucket_id
+    LEFT JOIN operators op ON op.id = t.assigned_operator_id
     WHERE t.id = ?
   `).get(id);
 
@@ -29,10 +31,12 @@ const listByPlan = (planId, filters = {}) => {
 
   return db.prepare(`
     SELECT t.*, u.display_name as assignee_name, u.avatar_url as assignee_avatar,
-           b.name as bucket_name
+           b.name as bucket_name,
+           op.name as operator_name
     FROM tasks t
     LEFT JOIN users u ON u.id = t.assigned_to
     LEFT JOIN buckets b ON b.id = t.bucket_id
+    LEFT JOIN operators op ON op.id = t.assigned_operator_id
     WHERE ${conditions.join(' AND ')}
     ORDER BY t."order" ASC
   `).all(...params);
@@ -53,7 +57,7 @@ const update = (id, data, userRole) => {
   const task = db.prepare('SELECT id, plan_id FROM tasks WHERE id = ?').get(id);
   if (!task) return { error: 'Task not found', status: 404 };
 
-  const allowed = ['name','assigned_to','bucket_id','start_date','finish_date','is_completed','"order"'];
+  const allowed = ['name','assigned_to','assigned_operator_id','bucket_id','start_date','finish_date','is_completed','status','progress','notes','"order"'];
   const fields = Object.keys(data).filter(f => allowed.includes(f) || f === 'order');
   const dbFields = fields.map(f => f === 'order' ? '"order"' : f);
 

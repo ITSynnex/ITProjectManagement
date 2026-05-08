@@ -5,8 +5,8 @@ import { Plus, X } from 'lucide-react';
 
 const BUCKET_COLORS = ['#0F6CBD', '#7C3AED', '#059669', '#D97706', '#DB2777', '#0891B2'];
 
-const TaskCard = ({ task, index, users, canEdit, onToggle, onDelete }) => {
-  const assignee = users.find(u => u.id === task.assigned_to);
+const TaskCard = ({ task, index, operators, canEdit, onToggle, onDelete }) => {
+  const operatorName = task.operator_name ?? operators.find(o => o.id === task.assigned_operator_id)?.name;
   return (
     <Draggable draggableId={String(task.id)} index={index} isDragDisabled={!canEdit}>
       {(provided, snapshot) => (
@@ -60,15 +60,15 @@ const TaskCard = ({ task, index, users, canEdit, onToggle, onDelete }) => {
               </button>
             )}
           </div>
-          {assignee && (
+          {operatorName && (
             <div className="flex items-center gap-1.5 mt-2 ml-5">
               <div
                 className="w-4 h-4 rounded-full flex items-center justify-center text-white flex-shrink-0"
                 style={{ backgroundColor: '#0F6CBD', fontSize: '9px', fontWeight: 600 }}
               >
-                {assignee.display_name.charAt(0).toUpperCase()}
+                {operatorName.charAt(0).toUpperCase()}
               </div>
-              <p className="text-xs" style={{ color: '#9CA3AF' }}>{assignee.display_name}</p>
+              <p className="text-xs" style={{ color: '#9CA3AF' }}>{operatorName}</p>
             </div>
           )}
         </div>
@@ -77,7 +77,7 @@ const TaskCard = ({ task, index, users, canEdit, onToggle, onDelete }) => {
   );
 };
 
-const BucketColumn = ({ bucket, tasks, users, canEdit, onToggle, onDelete, onAdd, colorIndex }) => {
+const BucketColumn = ({ bucket, tasks, operators, canEdit, onToggle, onDelete, onAdd, colorIndex }) => {
   const [newName, setNewName] = useState('');
   const [adding, setAdding]   = useState(false);
   const incomplete = tasks.filter(t => !t.is_completed).length;
@@ -128,7 +128,7 @@ const BucketColumn = ({ bucket, tasks, users, canEdit, onToggle, onDelete, onAdd
                 key={task.id}
                 task={task}
                 index={index}
-                users={users}
+                operators={operators}
                 canEdit={canEdit}
                 onToggle={onToggle}
                 onDelete={onDelete}
@@ -167,7 +167,7 @@ const BucketColumn = ({ bucket, tasks, users, canEdit, onToggle, onDelete, onAdd
   );
 };
 
-const BoardView = ({ planId, tasks, setTasks, buckets, users, canEdit }) => {
+const BoardView = ({ planId, tasks, setTasks, buckets, operators = [], canEdit }) => {
   const handleToggle = async (id) => {
     const res = await completeTask(id);
     setTasks(prev => prev.map(t => t.id === id ? { ...t, is_completed: res.data.is_completed } : t));
@@ -227,7 +227,7 @@ const BoardView = ({ planId, tasks, setTasks, buckets, users, canEdit }) => {
             key={bucket.id}
             bucket={bucket}
             tasks={tasks.filter(t => t.bucket_id === bucket.id)}
-            users={users}
+            operators={operators}
             canEdit={canEdit}
             onToggle={handleToggle}
             onDelete={handleDelete}
@@ -240,7 +240,7 @@ const BoardView = ({ planId, tasks, setTasks, buckets, users, canEdit }) => {
           <BucketColumn
             bucket={{ id: 0, name: 'No Bucket' }}
             tasks={unbucketedTasks}
-            users={users}
+            operators={operators}
             canEdit={canEdit}
             onToggle={handleToggle}
             onDelete={handleDelete}

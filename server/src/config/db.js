@@ -24,6 +24,7 @@ const migrations = [
   "ALTER TABLE plans ADD COLUMN department_id INTEGER",
   "ALTER TABLE plans ADD COLUMN operator_id INTEGER",
   "ALTER TABLE plans ADD COLUMN priority TEXT",
+  "ALTER TABLE tasks ADD COLUMN assigned_operator_id INTEGER",
 ];
 for (const sql of migrations) {
   try { db.exec(sql); } catch (_) { /* column already exists */ }

@@ -382,7 +382,7 @@ const PlanDetailPage = () => {
             <TaskTable
               tasks={filteredTasks}
               buckets={buckets}
-              users={users}
+              operators={operators}
               canEdit={canEdit}
               onToggle={handleToggle}
               onUpdate={handleUpdate}
@@ -421,7 +421,7 @@ const PlanDetailPage = () => {
               tasks={tasks}
               setTasks={setTasks}
               buckets={buckets}
-              users={users}
+              operators={operators}
               canEdit={canEdit}
             />
           </div>
