@@ -1,7 +1,7 @@
 import { NavLink, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
-  LayoutDashboard, FolderKanban, Users, Settings, ChevronDown,
+  LayoutDashboard, FolderKanban, Users, Settings, ChevronDown, UserCircle, Building2,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
@@ -91,6 +91,12 @@ const Sidebar = ({ open, onClose }) => {
           <NavItem to="/plans" end icon={FolderKanban} label="Projects" onClick={onClose} />
           {user?.role === 'it_manager' && (
             <NavItem to="/admin/users" icon={Users} label="Users" onClick={onClose} />
+          )}
+          {(user?.role === 'it_manager' || user?.role === 'pmo') && (
+            <NavItem to="/admin/operators" icon={UserCircle} label="Setup Operator" onClick={onClose} />
+          )}
+          {(user?.role === 'it_manager' || user?.role === 'pmo') && (
+            <NavItem to="/admin/departments" icon={Building2} label="Department Setup" onClick={onClose} />
           )}
 
           {/* Separator */}

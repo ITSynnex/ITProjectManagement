@@ -5,6 +5,8 @@ import LoginPage from '../pages/auth/LoginPage';
 import DashboardPage from '../pages/dashboard/DashboardPage';
 import PlanDetailPage from '../pages/plans/PlanDetailPage';
 import UserManagementPage from '../pages/admin/UserManagementPage';
+import SetupOperatorPage from '../pages/admin/SetupOperatorPage';
+import DepartmentSetupPage from '../pages/admin/DepartmentSetupPage';
 
 const AppRouter = () => (
   <BrowserRouter>
@@ -16,6 +18,12 @@ const AppRouter = () => (
         <Route path="plans/:id" element={<PlanDetailPage />} />
         <Route path="admin/users" element={
           <ProtectedRoute roles={['it_manager']}><UserManagementPage /></ProtectedRoute>
+        } />
+        <Route path="admin/operators" element={
+          <ProtectedRoute roles={['it_manager', 'pmo']}><SetupOperatorPage /></ProtectedRoute>
+        } />
+        <Route path="admin/departments" element={
+          <ProtectedRoute roles={['it_manager', 'pmo']}><DepartmentSetupPage /></ProtectedRoute>
         } />
         <Route path="*" element={<Navigate to="/plans" replace />} />
       </Route>

@@ -15,7 +15,7 @@ const STATUS_LABELS = {
   closed:      'Closed',
 };
 
-const empty = { name: '', team: '', owner_id: '', start_date: '', end_date: '', status: '' };
+const empty = { name: '', team: '', owner_id: '', start_date: '', end_date: '', status: '', department_id: '' };
 
 const Label = ({ children, required }) => (
   <label className="block text-[13px] font-medium text-[#374151] mb-1.5">
@@ -23,19 +23,20 @@ const Label = ({ children, required }) => (
   </label>
 );
 
-const PlanForm = ({ open, onClose, onSave, initial, users = [] }) => {
+const PlanForm = ({ open, onClose, onSave, initial, users = [], departments = [] }) => {
   const [form, setForm]     = useState(empty);
   const [error, setError]   = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     setForm(initial ? {
-      name:       initial.name       ?? '',
-      team:       initial.team       ?? '',
-      owner_id:   initial.owner_id   ?? '',
-      start_date: initial.start_date ?? '',
-      end_date:   initial.end_date   ?? '',
-      status:     initial.status     ?? '',
+      name:          initial.name          ?? '',
+      team:          initial.team          ?? '',
+      owner_id:      initial.owner_id      ?? '',
+      start_date:    initial.start_date    ?? '',
+      end_date:      initial.end_date      ?? '',
+      status:        initial.status        ?? '',
+      department_id: initial.department_id ?? '',
     } : empty);
     setError('');
   }, [open, initial]);
@@ -45,14 +46,16 @@ const PlanForm = ({ open, onClose, onSave, initial, users = [] }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name.trim()) return setError('Project name is required');
+    if (!form.department_id) return setError('Department is required');
     setSaving(true);
     setError('');
     try {
       await onSave({
         ...form,
-        owner_id: form.owner_id ? Number(form.owner_id) : undefined,
-        team:     form.team   || null,
-        status:   form.status || null,
+        owner_id:      form.owner_id      ? Number(form.owner_id)      : undefined,
+        team:          form.team          || null,
+        status:        form.status        || null,
+        department_id: form.department_id ? Number(form.department_id) : undefined,
       });
       onClose();
     } catch (err) {
@@ -74,6 +77,16 @@ const PlanForm = ({ open, onClose, onSave, initial, users = [] }) => {
           <Input value={form.name} onChange={set('name')} placeholder="e.g. Network Upgrade Q3" className="text-[13px]" />
         </div>
 
+        <div>
+          <Label required>Department</Label>
+          <select value={form.department_id} onChange={set('department_id')} className={selectClass}>
+            <option value="">— Select department —</option>
+            {departments.map(d => (
+              <option key={d.id} value={d.id}>{d.name}</option>
+            ))}
+          </select>
+        </div>
+
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label>Team</Label>
@@ -83,7 +96,7 @@ const PlanForm = ({ open, onClose, onSave, initial, users = [] }) => {
             </select>
           </div>
           <div>
-            <Label>Owner</Label>
+            <Label>Operator</Label>
             <select value={form.owner_id} onChange={set('owner_id')} className={selectClass}>
               <option value="">— Select owner —</option>
               {users.map(u => (

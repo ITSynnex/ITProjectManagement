@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { getPlans, createPlan, updatePlan, deletePlan } from '../../api/plans.api';
 import { getUsers } from '../../api/users.api';
+import { getActiveDepartments } from '../../api/departments.api';
 import PlanForm from '../../components/plans/PlanForm';
 import PlanRow from '../../components/plans/PlanRow';
 import ViewByOwner from '../../components/plans/ViewByOwner';
@@ -30,6 +31,7 @@ const DashboardPage = () => {
 
   const [plans, setPlans]               = useState([]);
   const [users, setUsers]               = useState([]);
+  const [departments, setDepartments]   = useState([]);
   const [loading, setLoading]           = useState(true);
   const [error, setError]               = useState('');
   const [showForm, setShowForm]         = useState(false);
@@ -45,10 +47,12 @@ const DashboardPage = () => {
     Promise.all([
       getPlans(),
       canEdit ? getUsers() : Promise.resolve({ data: [] }),
+      getActiveDepartments(),
     ])
-      .then(([plansRes, usersRes]) => {
+      .then(([plansRes, usersRes, deptsRes]) => {
         setPlans(plansRes.data);
         setUsers(usersRes.data);
+        setDepartments(deptsRes.data);
       })
       .catch(() => setError('Failed to load projects.'))
       .finally(() => setLoading(false));
@@ -177,7 +181,7 @@ const DashboardPage = () => {
                   <table className="w-full">
                     <thead>
                       <tr style={{ backgroundColor: '#FAFAF8', borderBottom: '1px solid #E8E6E0' }}>
-                        {['#', 'Project Name', 'Team', 'Owner', 'Progress', 'Start', 'End', 'Status', 'Bucket'].map(h => (
+                        {['#', 'Project Name', 'Team', 'Operator', 'Progress', 'Start', 'End', 'Status', 'Bucket'].map(h => (
                           <th key={h} className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-[#9CA3AF]">
                             {h}
                           </th>
@@ -234,6 +238,7 @@ const DashboardPage = () => {
           onSave={handleSave}
           initial={editTarget}
           users={users}
+          departments={departments}
         />
       )}
       {deleteTarget && (

@@ -13,7 +13,7 @@ const badgeVariants = cva(
         in_progress:'bg-yellow-50 text-yellow-700 ring-yellow-200',
         completed:  'bg-green-50 text-green-700 ring-green-200',
         on_track:    'bg-green-50 text-green-700 ring-green-200',
-        at_risk:     'bg-yellow-50 text-yellow-700 ring-yellow-200',
+        at_risk:     'bg-red-50 text-red-700 ring-red-200',
         closed:      'bg-blue-50 text-blue-700 ring-blue-200',
         not_started: 'bg-gray-100 text-gray-600 ring-gray-200',
         ongoing:     'bg-indigo-50 text-indigo-700 ring-indigo-200',

@@ -4,6 +4,7 @@ import { getPlan, updatePlan, deletePlan } from '../../api/plans.api';
 import { getTasks, createTask, updateTask, completeTask, deleteTask } from '../../api/tasks.api';
 import { getBuckets, createBucket, deleteBucket } from '../../api/buckets.api';
 import { getUsers } from '../../api/users.api';
+import { getActiveDepartments } from '../../api/departments.api';
 import PlanForm from '../../components/plans/PlanForm';
 import { TaskTable, effectiveStatus } from '../../components/tasks/TaskTable';
 import BoardView from '../../components/tasks/BoardView';
@@ -19,7 +20,7 @@ import { useAuth } from '../../context/AuthContext';
 import {
   ArrowLeft, Pencil, Trash2, Plus, X, Search,
   CheckCircle2, Clock, AlertTriangle, TrendingUp,
-  Filter, Users as UsersIcon,
+  Filter, Users as UsersIcon, UserCircle,
 } from 'lucide-react';
 import GanttProjectView from '../../components/gantt/GanttProjectView';
 import { cn } from '../../lib/utils';
@@ -53,6 +54,7 @@ const PlanDetailPage = () => {
   const [tasks, setTasks]       = useState([]);
   const [buckets, setBuckets]   = useState([]);
   const [users, setUsers]       = useState([]);
+  const [departments, setDepartments] = useState([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState('');
   const [detailTab, setDetailTab] = useState('Tasks');
@@ -71,14 +73,15 @@ const PlanDetailPage = () => {
     const loadAll = async () => {
       setLoading(true);
       try {
-        const requests = [getPlan(id), getTasks(id), getBuckets(id)];
+        const requests = [getPlan(id), getTasks(id), getBuckets(id), getActiveDepartments()];
         if (user?.role === 'it_manager' || user?.role === 'pmo') {
           requests.push(getUsers());
         }
-        const [planRes, taskRes, bucketRes, userRes] = await Promise.all(requests);
+        const [planRes, taskRes, bucketRes, deptsRes, userRes] = await Promise.all(requests);
         setPlan(planRes.data);
         setTasks(taskRes.data);
         setBuckets(bucketRes.data);
+        setDepartments(deptsRes.data);
         if (userRes) setUsers(userRes.data);
       } catch {
         setError('Failed to load project.');
@@ -202,11 +205,17 @@ const PlanDetailPage = () => {
                 <Badge variant={planStatusCfg.variant}>{planStatusCfg.label}</Badge>
               )}
             </div>
-            <p className="text-[13px] text-[#6B7280]">
+            <div className="flex items-center gap-4 text-[13px] text-[#6B7280] flex-wrap">
               {plan.start_date && (
                 <span>{formatDate(plan.start_date)} → {formatDate(plan.end_date)}</span>
               )}
-            </p>
+              {plan.owner_name && (
+                <span className="flex items-center gap-1">
+                  <UserCircle className="w-3.5 h-3.5" />
+                  <span className="font-medium text-[#374151]">Operator:</span> {plan.owner_name}
+                </span>
+              )}
+            </div>
           </div>
 
           {canEdit && (
@@ -475,7 +484,7 @@ const PlanDetailPage = () => {
       </div>
 
       {showEdit && (
-        <PlanForm open={showEdit} onClose={() => setShowEdit(false)} onSave={handleSavePlan} initial={plan} />
+        <PlanForm open={showEdit} onClose={() => setShowEdit(false)} onSave={handleSavePlan} initial={plan} users={users} departments={departments} />
       )}
       {showDelete && (
         <ConfirmDialog
