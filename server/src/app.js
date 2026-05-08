@@ -4,6 +4,7 @@ const cors    = require('cors');
 
 const authRoutes        = require('./modules/auth/auth.routes');
 const usersRoutes       = require('./modules/users/users.routes');
+const operatorsRoutes   = require('./modules/operators/operators.routes');
 const departmentsRoutes = require('./modules/departments/departments.routes');
 const plansRoutes       = require('./modules/plans/plans.routes');
 const bucketsRouter     = require('./modules/buckets/buckets.routes');
@@ -17,6 +18,7 @@ app.use(express.json());
 
 app.use('/api/auth',        authRoutes);
 app.use('/api/users',       usersRoutes);
+app.use('/api/operators',   operatorsRoutes);
 app.use('/api/departments', departmentsRoutes);
 app.use('/api/plans',       plansRoutes);
 
