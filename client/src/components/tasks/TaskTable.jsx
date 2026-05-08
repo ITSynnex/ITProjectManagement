@@ -12,7 +12,7 @@ const todayStr    = () => new Date().toISOString().slice(0, 10);
 const effectiveStatus = (task) => {
   if (task.is_completed || task.status === 'completed') return 'completed';
   if (task.status === 'blocked') return 'blocked';
-  if (task.finish_date && task.finish_date < todayStr()) return 'delayed';
+  if (task.status === 'delayed' || (task.finish_date && task.finish_date < todayStr())) return 'delayed';
   return 'in_progress';
 };
 
@@ -100,8 +100,14 @@ const TaskRow = ({ task, rowNum, operators, canEdit, onToggle, onUpdate, onDelet
       <td className="px-2 py-2.5 w-28">
         {canEdit ? (
           <select
-            value={task.status ?? 'in_progress'}
-            onChange={e => upd('status', e.target.value)}
+            value={status}
+            onChange={e => {
+              const newStatus = e.target.value;
+              const updates = { status: newStatus };
+              if (newStatus === 'completed') updates.is_completed = 1;
+              else if (task.is_completed) updates.is_completed = 0;
+              onUpdate(task.id, updates);
+            }}
             className="text-[11px] font-medium border-0 bg-transparent focus:ring-0 focus:outline-none cursor-pointer rounded"
             style={{
               color: { delayed:'#EF4444', blocked:'#F97316', in_progress:'#A16207', completed:'#16A34A' }[status] ?? '#374151',

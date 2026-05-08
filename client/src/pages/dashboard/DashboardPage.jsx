@@ -26,8 +26,8 @@ const DASHBOARD_TABS = [
 const DashboardPage = () => {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
-  const teamFilter  = searchParams.get('team');
-  const groupFilter = searchParams.get('group');
+  const teamFilter       = searchParams.get('team');
+  const departmentFilter = searchParams.get('department');
 
   const [plans, setPlans]               = useState([]);
   const [operators, setOperators]       = useState([]);
@@ -77,18 +77,19 @@ const DashboardPage = () => {
     finally  { setDeleteTarget(null); }
   };
 
-  let filtered = teamFilter
-    ? plans.filter(p => p.team === teamFilter)
-    : plans;
+  let filtered = plans;
+  if (teamFilter)       filtered = filtered.filter(p => p.team === teamFilter);
+  if (departmentFilter) filtered = filtered.filter(p => String(p.department_id) === departmentFilter);
+  if (search)           filtered = filtered.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
 
-  if (search) {
-    filtered = filtered.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
-  }
+  const deptName = departmentFilter
+    ? departments.find(d => String(d.id) === departmentFilter)?.name
+    : null;
 
   const title = teamFilter
     ? `${teamFilter} Projects`
-    : groupFilter
-    ? `${groupFilter} Projects`
+    : deptName
+    ? `${deptName} Projects`
     : 'Projects';
 
   const commonProps = {
@@ -206,7 +207,11 @@ const DashboardPage = () => {
                     <div className="text-center py-10 text-[13px] text-[#9CA3AF]">
                       {search
                         ? `No projects match "${search}"`
-                        : `No projects in team ${teamFilter}`}
+                        : teamFilter
+                        ? `No projects in team ${teamFilter}`
+                        : deptName
+                        ? `No projects in ${deptName}`
+                        : 'No projects found'}
                     </div>
                   )}
                 </div>
