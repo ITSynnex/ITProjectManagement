@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { getPlans, createPlan, updatePlan, deletePlan } from '../../api/plans.api';
-import { getUsers } from '../../api/users.api';
 import { getActiveDepartments } from '../../api/departments.api';
+import { getActiveOperators } from '../../api/operators.api';
 import PlanForm from '../../components/plans/PlanForm';
 import PlanRow from '../../components/plans/PlanRow';
 import ViewByOwner from '../../components/plans/ViewByOwner';
@@ -30,7 +30,7 @@ const DashboardPage = () => {
   const groupFilter = searchParams.get('group');
 
   const [plans, setPlans]               = useState([]);
-  const [users, setUsers]               = useState([]);
+  const [operators, setOperators]       = useState([]);
   const [departments, setDepartments]   = useState([]);
   const [loading, setLoading]           = useState(true);
   const [error, setError]               = useState('');
@@ -46,13 +46,13 @@ const DashboardPage = () => {
     setLoading(true);
     Promise.all([
       getPlans(),
-      canEdit ? getUsers() : Promise.resolve({ data: [] }),
       getActiveDepartments(),
+      getActiveOperators(),
     ])
-      .then(([plansRes, usersRes, deptsRes]) => {
+      .then(([plansRes, deptsRes, opsRes]) => {
         setPlans(plansRes.data);
-        setUsers(usersRes.data);
         setDepartments(deptsRes.data);
+        setOperators(opsRes.data);
       })
       .catch(() => setError('Failed to load projects.'))
       .finally(() => setLoading(false));
@@ -237,7 +237,7 @@ const DashboardPage = () => {
           onClose={() => { setShowForm(false); setEditTarget(null); }}
           onSave={handleSave}
           initial={editTarget}
-          users={users}
+          operators={operators}
           departments={departments}
         />
       )}

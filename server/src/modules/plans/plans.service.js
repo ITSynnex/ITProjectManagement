@@ -12,19 +12,23 @@ const list = () =>
   db.prepare(`
     SELECT p.*, u.display_name as owner_name, u.avatar_url as owner_avatar,
       d.name as department_name,
+      op.name as operator_name,
       (SELECT b.name FROM buckets b WHERE b.plan_id = p.id ORDER BY b."order" ASC LIMIT 1) as current_bucket
     FROM plans p
     JOIN users u ON u.id = p.owner_id
     LEFT JOIN departments d ON d.id = p.department_id
+    LEFT JOIN operators op ON op.id = p.operator_id
     ORDER BY p.created_at DESC
   `).all();
 
 const getById = (id) => {
   const plan = db.prepare(`
     SELECT p.*, u.display_name as owner_name, u.avatar_url as owner_avatar,
-      d.name as department_name
+      d.name as department_name,
+      op.name as operator_name
     FROM plans p JOIN users u ON u.id = p.owner_id
     LEFT JOIN departments d ON d.id = p.department_id
+    LEFT JOIN operators op ON op.id = p.operator_id
     WHERE p.id = ?
   `).get(id);
   if (!plan) return null;
@@ -41,16 +45,18 @@ const getById = (id) => {
 };
 
 const create = (data, userId) => {
-  const { name, team, start_date, end_date, status, owner_id, department_id } = data;
+  const { name, team, start_date, end_date, status, owner_id, department_id, operator_id } = data;
   const resolvedOwner = owner_id || userId;
   const result = db.prepare(
-    'INSERT INTO plans (name, team, owner_id, start_date, end_date, status, department_id) VALUES (?, ?, ?, ?, ?, ?, ?)'
-  ).run(name, team || null, resolvedOwner, start_date || null, end_date || null, status || null, department_id || null);
+    'INSERT INTO plans (name, team, owner_id, start_date, end_date, status, department_id, operator_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+  ).run(name, team || null, resolvedOwner, start_date || null, end_date || null, status || null, department_id || null, operator_id || null);
   return db.prepare(`
     SELECT p.*, u.display_name as owner_name, u.avatar_url as owner_avatar,
-      d.name as department_name
+      d.name as department_name,
+      op.name as operator_name
     FROM plans p JOIN users u ON u.id = p.owner_id
     LEFT JOIN departments d ON d.id = p.department_id
+    LEFT JOIN operators op ON op.id = p.operator_id
     WHERE p.id = ?
   `).get(result.lastInsertRowid);
 };
@@ -58,16 +64,18 @@ const create = (data, userId) => {
 const update = (id, data) => {
   const plan = db.prepare('SELECT id FROM plans WHERE id = ?').get(id);
   if (!plan) return null;
-  const fields = ['name','team','owner_id','progress','start_date','end_date','status','department_id'].filter(f => data[f] !== undefined);
+  const fields = ['name','team','owner_id','progress','start_date','end_date','status','department_id','operator_id'].filter(f => data[f] !== undefined);
   if (fields.length) {
     const sql = `UPDATE plans SET ${fields.map(f => `${f} = ?`).join(', ')} WHERE id = ?`;
     db.prepare(sql).run(...fields.map(f => data[f]), id);
   }
   return db.prepare(`
     SELECT p.*, u.display_name as owner_name, u.avatar_url as owner_avatar,
-      d.name as department_name
+      d.name as department_name,
+      op.name as operator_name
     FROM plans p JOIN users u ON u.id = p.owner_id
     LEFT JOIN departments d ON d.id = p.department_id
+    LEFT JOIN operators op ON op.id = p.operator_id
     WHERE p.id = ?
   `).get(id);
 };

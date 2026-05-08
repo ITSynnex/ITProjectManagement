@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import StatusBadge from '../common/StatusBadge';
 import ProgressBar from '../common/ProgressBar';
-import Avatar from '../common/Avatar';
 import { formatDate } from '../../utils/formatDate';
 import { Pencil, Trash2 } from 'lucide-react';
 
@@ -50,11 +49,8 @@ const PlanRow = ({ plan, index, onEdit, onDelete, canEdit }) => {
       </td>
 
       <td className="px-4 py-3.5">
-        {plan.owner_name ? (
-          <div className="flex items-center gap-2">
-            <Avatar name={plan.owner_name} size="sm" />
-            <span className="text-[13px]" style={{ color: '#374151' }}>{plan.owner_name}</span>
-          </div>
+        {plan.operator_name ? (
+          <span className="text-[13px]" style={{ color: '#374151' }}>{plan.operator_name}</span>
         ) : (
           <span className="text-sm" style={{ color: '#D1D5DB' }}>—</span>
         )}

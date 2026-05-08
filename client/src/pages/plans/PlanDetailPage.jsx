@@ -5,6 +5,7 @@ import { getTasks, createTask, updateTask, completeTask, deleteTask } from '../.
 import { getBuckets, createBucket, deleteBucket } from '../../api/buckets.api';
 import { getUsers } from '../../api/users.api';
 import { getActiveDepartments } from '../../api/departments.api';
+import { getActiveOperators } from '../../api/operators.api';
 import PlanForm from '../../components/plans/PlanForm';
 import { TaskTable, effectiveStatus } from '../../components/tasks/TaskTable';
 import BoardView from '../../components/tasks/BoardView';
@@ -53,7 +54,8 @@ const PlanDetailPage = () => {
   const [plan, setPlan]         = useState(null);
   const [tasks, setTasks]       = useState([]);
   const [buckets, setBuckets]   = useState([]);
-  const [users, setUsers]       = useState([]);
+  const [users, setUsers]         = useState([]);
+  const [operators, setOperators] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState('');
@@ -73,15 +75,14 @@ const PlanDetailPage = () => {
     const loadAll = async () => {
       setLoading(true);
       try {
-        const requests = [getPlan(id), getTasks(id), getBuckets(id), getActiveDepartments()];
-        if (user?.role === 'it_manager' || user?.role === 'pmo') {
-          requests.push(getUsers());
-        }
-        const [planRes, taskRes, bucketRes, deptsRes, userRes] = await Promise.all(requests);
+        const requests = [getPlan(id), getTasks(id), getBuckets(id), getActiveDepartments(), getActiveOperators()];
+        if (user?.role === 'it_manager' || user?.role === 'pmo') requests.push(getUsers());
+        const [planRes, taskRes, bucketRes, deptsRes, opsRes, userRes] = await Promise.all(requests);
         setPlan(planRes.data);
         setTasks(taskRes.data);
         setBuckets(bucketRes.data);
         setDepartments(deptsRes.data);
+        setOperators(opsRes.data);
         if (userRes) setUsers(userRes.data);
       } catch {
         setError('Failed to load project.');
@@ -209,10 +210,10 @@ const PlanDetailPage = () => {
               {plan.start_date && (
                 <span>{formatDate(plan.start_date)} → {formatDate(plan.end_date)}</span>
               )}
-              {plan.owner_name && (
+              {plan.operator_name && (
                 <span className="flex items-center gap-1">
                   <UserCircle className="w-3.5 h-3.5" />
-                  <span className="font-medium text-[#374151]">Operator:</span> {plan.owner_name}
+                  <span className="font-medium text-[#374151]">Operator:</span> {plan.operator_name}
                 </span>
               )}
             </div>
@@ -484,7 +485,7 @@ const PlanDetailPage = () => {
       </div>
 
       {showEdit && (
-        <PlanForm open={showEdit} onClose={() => setShowEdit(false)} onSave={handleSavePlan} initial={plan} users={users} departments={departments} />
+        <PlanForm open={showEdit} onClose={() => setShowEdit(false)} onSave={handleSavePlan} initial={plan} operators={operators} departments={departments} />
       )}
       {showDelete && (
         <ConfirmDialog

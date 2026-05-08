@@ -15,7 +15,7 @@ const STATUS_LABELS = {
   closed:      'Closed',
 };
 
-const empty = { name: '', team: '', owner_id: '', start_date: '', end_date: '', status: '', department_id: '' };
+const empty = { name: '', team: '', operator_id: '', start_date: '', end_date: '', status: '', department_id: '' };
 
 const Label = ({ children, required }) => (
   <label className="block text-[13px] font-medium text-[#374151] mb-1.5">
@@ -23,7 +23,7 @@ const Label = ({ children, required }) => (
   </label>
 );
 
-const PlanForm = ({ open, onClose, onSave, initial, users = [], departments = [] }) => {
+const PlanForm = ({ open, onClose, onSave, initial, operators = [], departments = [] }) => {
   const [form, setForm]     = useState(empty);
   const [error, setError]   = useState('');
   const [saving, setSaving] = useState(false);
@@ -32,7 +32,7 @@ const PlanForm = ({ open, onClose, onSave, initial, users = [], departments = []
     setForm(initial ? {
       name:          initial.name          ?? '',
       team:          initial.team          ?? '',
-      owner_id:      initial.owner_id      ?? '',
+      operator_id:   initial.operator_id   ?? '',
       start_date:    initial.start_date    ?? '',
       end_date:      initial.end_date      ?? '',
       status:        initial.status        ?? '',
@@ -52,7 +52,7 @@ const PlanForm = ({ open, onClose, onSave, initial, users = [], departments = []
     try {
       await onSave({
         ...form,
-        owner_id:      form.owner_id      ? Number(form.owner_id)      : undefined,
+        operator_id:   form.operator_id   ? Number(form.operator_id)   : null,
         team:          form.team          || null,
         status:        form.status        || null,
         department_id: form.department_id ? Number(form.department_id) : undefined,
@@ -97,10 +97,10 @@ const PlanForm = ({ open, onClose, onSave, initial, users = [], departments = []
           </div>
           <div>
             <Label>Operator</Label>
-            <select value={form.owner_id} onChange={set('owner_id')} className={selectClass}>
-              <option value="">— Select owner —</option>
-              {users.map(u => (
-                <option key={u.id} value={u.id}>{u.display_name}</option>
+            <select value={form.operator_id} onChange={set('operator_id')} className={selectClass}>
+              <option value="">— Select operator —</option>
+              {operators.map(op => (
+                <option key={op.id} value={op.id}>{op.name}</option>
               ))}
             </select>
           </div>
