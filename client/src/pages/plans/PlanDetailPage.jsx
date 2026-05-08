@@ -149,7 +149,7 @@ const PlanDetailPage = () => {
     const total     = tasks.length;
     const completed = tasks.filter(t => effectiveStatus(t) === 'completed').length;
     const delayed   = tasks.filter(t => effectiveStatus(t) === 'delayed').length;
-    const avgProg   = total ? Math.round(tasks.reduce((s, t) => s + (t.progress ?? 0), 0) / total) : 0;
+    const avgProg   = total ? Math.round((completed / total) * 100) : 0;
     return { total, completed, delayed, avgProg };
   }, [tasks]);
 
