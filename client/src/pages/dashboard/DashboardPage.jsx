@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { getPlans, createPlan, updatePlan, deletePlan } from '../../api/plans.api';
+import { getUsers } from '../../api/users.api';
 import PlanForm from '../../components/plans/PlanForm';
 import PlanRow from '../../components/plans/PlanRow';
 import ViewByOwner from '../../components/plans/ViewByOwner';
@@ -28,6 +29,7 @@ const DashboardPage = () => {
   const groupFilter = searchParams.get('group');
 
   const [plans, setPlans]               = useState([]);
+  const [users, setUsers]               = useState([]);
   const [loading, setLoading]           = useState(true);
   const [error, setError]               = useState('');
   const [showForm, setShowForm]         = useState(false);
@@ -40,8 +42,14 @@ const DashboardPage = () => {
 
   useEffect(() => {
     setLoading(true);
-    getPlans()
-      .then(r => setPlans(r.data))
+    Promise.all([
+      getPlans(),
+      canEdit ? getUsers() : Promise.resolve({ data: [] }),
+    ])
+      .then(([plansRes, usersRes]) => {
+        setPlans(plansRes.data);
+        setUsers(usersRes.data);
+      })
       .catch(() => setError('Failed to load projects.'))
       .finally(() => setLoading(false));
   }, []);
@@ -225,6 +233,7 @@ const DashboardPage = () => {
           onClose={() => { setShowForm(false); setEditTarget(null); }}
           onSave={handleSave}
           initial={editTarget}
+          users={users}
         />
       )}
       {deleteTarget && (

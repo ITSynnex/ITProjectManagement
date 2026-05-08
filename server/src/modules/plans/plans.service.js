@@ -51,7 +51,7 @@ const create = (data, userId) => {
 const update = (id, data) => {
   const plan = db.prepare('SELECT id FROM plans WHERE id = ?').get(id);
   if (!plan) return null;
-  const fields = ['name','team','progress','start_date','end_date','status'].filter(f => data[f] !== undefined);
+  const fields = ['name','team','owner_id','progress','start_date','end_date','status'].filter(f => data[f] !== undefined);
   if (fields.length) {
     const sql = `UPDATE plans SET ${fields.map(f => `${f} = ?`).join(', ')} WHERE id = ?`;
     db.prepare(sql).run(...fields.map(f => data[f]), id);

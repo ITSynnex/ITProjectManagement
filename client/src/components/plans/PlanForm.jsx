@@ -15,7 +15,7 @@ const STATUS_LABELS = {
   closed:      'Closed',
 };
 
-const empty = { name: '', team: '', start_date: '', end_date: '', status: '' };
+const empty = { name: '', team: '', owner_id: '', start_date: '', end_date: '', status: '' };
 
 const Label = ({ children, required }) => (
   <label className="block text-[13px] font-medium text-[#374151] mb-1.5">
@@ -23,7 +23,7 @@ const Label = ({ children, required }) => (
   </label>
 );
 
-const PlanForm = ({ open, onClose, onSave, initial }) => {
+const PlanForm = ({ open, onClose, onSave, initial, users = [] }) => {
   const [form, setForm]     = useState(empty);
   const [error, setError]   = useState('');
   const [saving, setSaving] = useState(false);
@@ -32,6 +32,7 @@ const PlanForm = ({ open, onClose, onSave, initial }) => {
     setForm(initial ? {
       name:       initial.name       ?? '',
       team:       initial.team       ?? '',
+      owner_id:   initial.owner_id   ?? '',
       start_date: initial.start_date ?? '',
       end_date:   initial.end_date   ?? '',
       status:     initial.status     ?? '',
@@ -49,8 +50,9 @@ const PlanForm = ({ open, onClose, onSave, initial }) => {
     try {
       await onSave({
         ...form,
-        team:   form.team   || null,
-        status: form.status || null,
+        owner_id: form.owner_id ? Number(form.owner_id) : undefined,
+        team:     form.team   || null,
+        status:   form.status || null,
       });
       onClose();
     } catch (err) {
@@ -72,12 +74,23 @@ const PlanForm = ({ open, onClose, onSave, initial }) => {
           <Input value={form.name} onChange={set('name')} placeholder="e.g. Network Upgrade Q3" className="text-[13px]" />
         </div>
 
-        <div>
-          <Label>Team</Label>
-          <select value={form.team} onChange={set('team')} className={selectClass}>
-            <option value="">— No team —</option>
-            {TEAMS.map(t => <option key={t} value={t}>{t}</option>)}
-          </select>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label>Team</Label>
+            <select value={form.team} onChange={set('team')} className={selectClass}>
+              <option value="">— No team —</option>
+              {TEAMS.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+          <div>
+            <Label>Owner</Label>
+            <select value={form.owner_id} onChange={set('owner_id')} className={selectClass}>
+              <option value="">— Select owner —</option>
+              {users.map(u => (
+                <option key={u.id} value={u.id}>{u.display_name}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
