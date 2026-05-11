@@ -3,9 +3,10 @@ import { useSearchParams } from 'react-router-dom';
 import { getPlans, createPlan, updatePlan, deletePlan } from '../../api/plans.api';
 import { getActiveDepartments } from '../../api/departments.api';
 import { getActiveOperators } from '../../api/operators.api';
+import { getActivePlanStatuses } from '../../api/planStatuses.api';
 import PlanForm from '../../components/plans/PlanForm';
 import PlanRow from '../../components/plans/PlanRow';
-import ViewByOwner from '../../components/plans/ViewByOwner';
+import ViewByOperator from '../../components/plans/ViewByOperator';
 import ViewByStatus from '../../components/plans/ViewByStatus';
 import GanttOverview from '../../components/gantt/GanttOverview';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
@@ -17,10 +18,10 @@ import { Plus, FolderKanban, Search } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 const DASHBOARD_TABS = [
-  { key: 'all',      label: 'All Projects' },
-  { key: 'by_owner', label: 'View by Owner' },
-  { key: 'by_status',label: 'View by Status' },
-  { key: 'gantt',    label: 'Gantt chart' },
+  { key: 'all',          label: 'All Projects' },
+  { key: 'by_operator',  label: 'View by Operator' },
+  { key: 'by_status',    label: 'View by Status' },
+  { key: 'gantt',        label: 'Gantt chart' },
 ];
 
 const DashboardPage = () => {
@@ -32,6 +33,7 @@ const DashboardPage = () => {
   const [plans, setPlans]               = useState([]);
   const [operators, setOperators]       = useState([]);
   const [departments, setDepartments]   = useState([]);
+  const [planStatuses, setPlanStatuses] = useState([]);
   const [loading, setLoading]           = useState(true);
   const [error, setError]               = useState('');
   const [showForm, setShowForm]         = useState(false);
@@ -48,11 +50,13 @@ const DashboardPage = () => {
       getPlans(),
       getActiveDepartments(),
       getActiveOperators(),
+      getActivePlanStatuses(),
     ])
-      .then(([plansRes, deptsRes, opsRes]) => {
+      .then(([plansRes, deptsRes, opsRes, statusesRes]) => {
         setPlans(plansRes.data);
         setDepartments(deptsRes.data);
         setOperators(opsRes.data);
+        setPlanStatuses(statusesRes.data);
       })
       .catch(() => setError('Failed to load projects.'))
       .finally(() => setLoading(false));
@@ -218,19 +222,19 @@ const DashboardPage = () => {
               </div>
             )}
 
-            {/* ── View by Owner tab ── */}
-            {activeTab === 'by_owner' && (
-              <ViewByOwner plans={filtered} {...commonProps} />
+            {/* ── View by Operator tab ── */}
+            {activeTab === 'by_operator' && (
+              <ViewByOperator plans={filtered} {...commonProps} />
             )}
 
             {/* ── View by Status tab ── */}
             {activeTab === 'by_status' && (
-              <ViewByStatus plans={filtered} {...commonProps} />
+              <ViewByStatus plans={filtered} statuses={planStatuses} {...commonProps} />
             )}
 
             {/* ── Gantt chart tab ── */}
             {activeTab === 'gantt' && (
-              <GanttOverview />
+              <GanttOverview teamFilter={teamFilter} departmentFilter={departmentFilter} />
             )}
           </>
         )}

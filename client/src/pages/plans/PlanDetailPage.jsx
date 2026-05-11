@@ -6,6 +6,7 @@ import { getBuckets, createBucket, deleteBucket } from '../../api/buckets.api';
 import { getUsers } from '../../api/users.api';
 import { getActiveDepartments } from '../../api/departments.api';
 import { getActiveOperators } from '../../api/operators.api';
+import { getActivePlanStatuses } from '../../api/planStatuses.api';
 import PlanForm from '../../components/plans/PlanForm';
 import { TaskTable, effectiveStatus } from '../../components/tasks/TaskTable';
 import BoardView from '../../components/tasks/BoardView';
@@ -26,15 +27,6 @@ import {
 import GanttProjectView from '../../components/gantt/GanttProjectView';
 import { cn } from '../../lib/utils';
 
-const PLAN_STATUS_CONFIG = {
-  on_track:    { variant: 'on_track',    label: 'On Track' },
-  at_risk:     { variant: 'at_risk',     label: 'At Risk' },
-  closed:      { variant: 'closed',      label: 'Closed' },
-  not_started: { variant: 'not_started', label: 'Not Started' },
-  ongoing:     { variant: 'ongoing',     label: 'Ongoing' },
-  completed:   { variant: 'completed',   label: 'Completed' },
-  suspended:   { variant: 'suspended',   label: 'Suspended' },
-};
 
 const FILTER_TABS = [
   { key: 'all',         label: 'All' },
@@ -54,9 +46,10 @@ const PlanDetailPage = () => {
   const [plan, setPlan]         = useState(null);
   const [tasks, setTasks]       = useState([]);
   const [buckets, setBuckets]   = useState([]);
-  const [users, setUsers]         = useState([]);
-  const [operators, setOperators] = useState([]);
+  const [users, setUsers]             = useState([]);
+  const [operators, setOperators]     = useState([]);
   const [departments, setDepartments] = useState([]);
+  const [planStatuses, setPlanStatuses] = useState([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState('');
   const [detailTab, setDetailTab] = useState('Tasks');
@@ -75,14 +68,15 @@ const PlanDetailPage = () => {
     const loadAll = async () => {
       setLoading(true);
       try {
-        const requests = [getPlan(id), getTasks(id), getBuckets(id), getActiveDepartments(), getActiveOperators()];
+        const requests = [getPlan(id), getTasks(id), getBuckets(id), getActiveDepartments(), getActiveOperators(), getActivePlanStatuses()];
         if (user?.role === 'it_manager' || user?.role === 'pmo') requests.push(getUsers());
-        const [planRes, taskRes, bucketRes, deptsRes, opsRes, userRes] = await Promise.all(requests);
+        const [planRes, taskRes, bucketRes, deptsRes, opsRes, statusesRes, userRes] = await Promise.all(requests);
         setPlan(planRes.data);
         setTasks(taskRes.data);
         setBuckets(bucketRes.data);
         setDepartments(deptsRes.data);
         setOperators(opsRes.data);
+        setPlanStatuses(statusesRes.data);
         if (userRes) setUsers(userRes.data);
       } catch {
         setError('Failed to load project.');
@@ -178,7 +172,9 @@ const PlanDetailPage = () => {
   if (error)   return <div className="p-6 text-sm text-red-600">{error}</div>;
   if (!plan)   return null;
 
-  const planStatusCfg = PLAN_STATUS_CONFIG[plan.status];
+  const planStatusCfg = plan.status
+    ? (planStatuses.find(s => s.name === plan.status) ?? { color: 'default', label: plan.status })
+    : null;
 
   return (
     <div className="flex flex-col h-full min-h-0">
@@ -203,7 +199,7 @@ const PlanDetailPage = () => {
             <div className="flex items-center gap-2.5 mb-1">
               <h1 className="text-2xl font-semibold text-[#1A1A1A]">{plan.name}</h1>
               {planStatusCfg && (
-                <Badge variant={planStatusCfg.variant}>{planStatusCfg.label}</Badge>
+                <Badge variant={planStatusCfg.color}>{planStatusCfg.label}</Badge>
               )}
             </div>
             <div className="flex items-center gap-4 text-[13px] text-[#6B7280] flex-wrap">

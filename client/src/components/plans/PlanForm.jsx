@@ -3,6 +3,8 @@ import Modal from '../common/Modal';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { cn } from '../../lib/utils';
+import { getActiveTeams } from '../../api/teams.api';
+import { getActivePlanStatuses } from '../../api/planStatuses.api';
 
 const PRIORITIES = [
   { value: 'low',      label: 'Low',      active: 'bg-blue-50 text-blue-700 border-blue-400',   dot: 'bg-blue-400' },
@@ -10,18 +12,6 @@ const PRIORITIES = [
   { value: 'high',     label: 'High',     active: 'bg-orange-50 text-orange-700 border-orange-400', dot: 'bg-orange-400' },
   { value: 'critical', label: 'Critical', active: 'bg-red-50 text-red-700 border-red-500',      dot: 'bg-red-500' },
 ];
-
-const TEAMS    = ['DEV1', 'DEV2', 'INFRA', 'AI', 'PRODUCT'];
-const STATUSES = ['not_started', 'ongoing', 'completed', 'suspended', 'on_track', 'at_risk', 'closed'];
-const STATUS_LABELS = {
-  not_started: 'Not Started',
-  ongoing:     'Ongoing',
-  completed:   'Completed',
-  suspended:   'Suspended',
-  on_track:    'On Track',
-  at_risk:     'At Risk',
-  closed:      'Closed',
-};
 
 const empty = { name: '', team: '', operator_id: '', start_date: '', end_date: '', status: '', department_id: '', priority: '' };
 
@@ -35,6 +25,13 @@ const PlanForm = ({ open, onClose, onSave, initial, operators = [], departments 
   const [form, setForm]     = useState(empty);
   const [error, setError]   = useState('');
   const [saving, setSaving] = useState(false);
+  const [teams, setTeams]       = useState([]);
+  const [statuses, setStatuses] = useState([]);
+
+  useEffect(() => {
+    getActiveTeams().then(r => setTeams(r.data)).catch(() => {});
+    getActivePlanStatuses().then(r => setStatuses(r.data)).catch(() => {});
+  }, []);
 
   useEffect(() => {
     setForm(initial ? {
@@ -124,7 +121,7 @@ const PlanForm = ({ open, onClose, onSave, initial, operators = [], departments 
             <Label>Team</Label>
             <select value={form.team} onChange={set('team')} className={selectClass}>
               <option value="">— No team —</option>
-              {TEAMS.map(t => <option key={t} value={t}>{t}</option>)}
+              {teams.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
             </select>
           </div>
           <div>
@@ -153,7 +150,7 @@ const PlanForm = ({ open, onClose, onSave, initial, operators = [], departments 
           <Label>Status</Label>
           <select value={form.status} onChange={set('status')} className={selectClass}>
             <option value="">— No status —</option>
-            {STATUSES.map(s => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
+            {statuses.map(s => <option key={s.name} value={s.name}>{s.label}</option>)}
           </select>
         </div>
 

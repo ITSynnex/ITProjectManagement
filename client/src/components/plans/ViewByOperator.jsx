@@ -1,52 +1,27 @@
 import { useMemo, useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import PlanRow from './PlanRow';
-import { Badge } from '../ui/badge';
 
-const FALLBACK_ORDER = [
-  { name: 'not_started', label: 'Not Started', color: 'not_started' },
-  { name: 'ongoing',     label: 'Ongoing',     color: 'ongoing' },
-  { name: 'on_track',    label: 'On Track',    color: 'on_track' },
-  { name: 'at_risk',     label: 'At Risk',     color: 'at_risk' },
-  { name: 'completed',   label: 'Completed',   color: 'completed' },
-  { name: 'suspended',   label: 'Suspended',   color: 'suspended' },
-  { name: 'closed',      label: 'Closed',      color: 'closed' },
-];
-
-const ViewByStatus = ({ plans, statuses, canEdit, onEdit, onDelete }) => {
+const ViewByOperator = ({ plans, canEdit, onEdit, onDelete }) => {
   const [collapsed, setCollapsed] = useState(new Set());
-
-  const statusOrder = statuses?.length ? statuses : FALLBACK_ORDER;
 
   const groups = useMemo(() => {
     const map = {};
     plans.forEach(p => {
-      const key = p.status || '__none__';
-      if (!map[key]) map[key] = [];
-      map[key].push(p);
+      const key = p.operator_name || 'Unassigned';
+      if (!map[key]) map[key] = { operator: key, plans: [] };
+      map[key].plans.push(p);
     });
-
-    const ordered = statusOrder
-      .filter(s => map[s.name]?.length > 0)
-      .map(s => ({ key: s.name, label: s.label, color: s.color, plans: map[s.name] }));
-
-    if (map['__none__']?.length) {
-      ordered.push({ key: '__none__', label: 'No Status', color: 'default', plans: map['__none__'] });
-    }
-
-    // Append any plan statuses not in statusOrder (e.g. custom ones not yet loaded)
-    Object.keys(map).forEach(key => {
-      if (key !== '__none__' && !ordered.find(g => g.key === key)) {
-        ordered.push({ key, label: key, color: 'default', plans: map[key] });
-      }
+    return Object.values(map).sort((a, b) => {
+      if (a.operator === 'Unassigned') return 1;
+      if (b.operator === 'Unassigned') return -1;
+      return a.operator.localeCompare(b.operator);
     });
+  }, [plans]);
 
-    return ordered;
-  }, [plans, statusOrder]);
-
-  const toggle = (key) => setCollapsed(prev => {
+  const toggle = (operator) => setCollapsed(prev => {
     const next = new Set(prev);
-    next.has(key) ? next.delete(key) : next.add(key);
+    next.has(operator) ? next.delete(operator) : next.add(operator);
     return next;
   });
 
@@ -56,22 +31,26 @@ const ViewByStatus = ({ plans, statuses, canEdit, onEdit, onDelete }) => {
 
   return (
     <div className="space-y-4">
-      {groups.map(({ key, label, color, plans: statusPlans }) => {
-        const isCollapsed = collapsed.has(key);
+      {groups.map(({ operator, plans: opPlans }) => {
+        const isCollapsed = collapsed.has(operator);
+        const initial = operator === 'Unassigned' ? '—' : operator[0].toUpperCase();
         return (
-          <div key={key} className="bg-white rounded-xl border border-[#E8E6E0] overflow-hidden"
+          <div key={operator} className="bg-white rounded-xl border border-[#E8E6E0] overflow-hidden"
             style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
             <button
-              onClick={() => toggle(key)}
+              onClick={() => toggle(operator)}
               className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#F7F6F3] transition-colors"
               style={{ backgroundColor: '#FAFAF8', borderBottom: isCollapsed ? 'none' : '1px solid #E8E6E0' }}
             >
               {isCollapsed
                 ? <ChevronRight className="w-4 h-4 text-[#9CA3AF]" />
                 : <ChevronDown  className="w-4 h-4 text-[#9CA3AF]" />}
-              <Badge variant={color}>{label}</Badge>
-              <span className="text-[11px] text-[#9CA3AF] bg-[#F3F4F6] px-1.5 py-0.5 rounded-full">
-                {statusPlans.length} record{statusPlans.length !== 1 ? 's' : ''}
+              <span className="w-7 h-7 rounded-full bg-[#EEF2FF] text-[#4F46E5] text-[11px] font-bold flex items-center justify-center flex-shrink-0">
+                {initial}
+              </span>
+              <span className="text-[13px] font-semibold text-[#1A1A1A]">{operator}</span>
+              <span className="ml-2 text-[11px] text-[#9CA3AF] bg-[#F3F4F6] px-1.5 py-0.5 rounded-full">
+                {opPlans.length}
               </span>
             </button>
 
@@ -88,7 +67,7 @@ const ViewByStatus = ({ plans, statuses, canEdit, onEdit, onDelete }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {statusPlans.map((plan, idx) => (
+                  {opPlans.map((plan, idx) => (
                     <PlanRow
                       key={plan.id}
                       plan={plan}
@@ -108,4 +87,4 @@ const ViewByStatus = ({ plans, statuses, canEdit, onEdit, onDelete }) => {
   );
 };
 
-export default ViewByStatus;
+export default ViewByOperator;

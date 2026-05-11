@@ -3,20 +3,12 @@ import { NavLink, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
   LayoutDashboard, FolderKanban, Users, Settings,
-  ChevronLeft, ChevronRight, UserCircle, Building2,
+  ChevronLeft, ChevronRight, UserCircle, Building2, UsersRound, Tag,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { getActiveDepartments } from '../../api/departments.api';
-
-const TEAMS = ['DEV1', 'DEV2', 'INFRA', 'AI', 'PRODUCT'];
-
-const TEAM_COLORS = {
-  DEV1:    { bg: '#EEF2FF', text: '#4F46E5' },
-  DEV2:    { bg: '#F0FDF4', text: '#16A34A' },
-  INFRA:   { bg: '#FFF7ED', text: '#EA580C' },
-  AI:      { bg: '#FDF4FF', text: '#9333EA' },
-  PRODUCT: { bg: '#FFF1F2', text: '#E11D48' },
-};
+import { getActiveTeams } from '../../api/teams.api';
+import { getTeamColors } from '../../lib/teamColors';
 
 const DEPT_COLORS = [
   { bg: '#EEF2FF', text: '#4F46E5' },
@@ -75,16 +67,20 @@ const Sidebar = ({ open, onClose, collapsed, onToggleCollapse }) => {
   const activeTeam = searchParams.get('team');
   const activeDept = searchParams.get('department');
 
+  const [teams, setTeams]           = useState([]);
   const [departments, setDepartments] = useState([]);
 
   useEffect(() => {
+    getActiveTeams()
+      .then(r => setTeams(r.data))
+      .catch(() => {});
     getActiveDepartments()
       .then(r => setDepartments(r.data))
       .catch(() => {});
   }, []);
 
-  const handleTeamClick = (team) => {
-    navigate(activeTeam === team ? '/plans' : `/plans?team=${team}`);
+  const handleTeamClick = (teamName) => {
+    navigate(activeTeam === teamName ? '/plans' : `/plans?team=${teamName}`);
     onClose?.();
   };
 
@@ -135,7 +131,13 @@ const Sidebar = ({ open, onClose, collapsed, onToggleCollapse }) => {
             <NavItem to="/admin/operators" icon={UserCircle} label="Setup Operator" onClick={onClose} collapsed={collapsed} />
           )}
           {(user?.role === 'it_manager' || user?.role === 'pmo') && (
-            <NavItem to="/admin/departments" icon={Building2} label="Department Setup" onClick={onClose} collapsed={collapsed} />
+            <NavItem to="/admin/departments" icon={Building2} label="Setup Department" onClick={onClose} collapsed={collapsed} />
+          )}
+          {(user?.role === 'it_manager' || user?.role === 'pmo') && (
+            <NavItem to="/admin/teams" icon={UsersRound} label="Setup Teams" onClick={onClose} collapsed={collapsed} />
+          )}
+          {(user?.role === 'it_manager' || user?.role === 'pmo') && (
+            <NavItem to="/admin/statuses" icon={Tag} label="Setup Status" onClick={onClose} collapsed={collapsed} />
           )}
 
           {/* Separator */}
@@ -149,13 +151,16 @@ const Sidebar = ({ open, onClose, collapsed, onToggleCollapse }) => {
               </div>
             )}
             <div className="space-y-0.5">
-              {TEAMS.map(team => {
-                const isActive = activeTeam === team;
-                const colors   = TEAM_COLORS[team];
+              {!collapsed && teams.length === 0 && (
+                <p className="px-3 py-1 text-[12px] text-[#C4C0B8]">No teams</p>
+              )}
+              {teams.map(team => {
+                const isActive = activeTeam === team.name;
+                const colors   = getTeamColors(team.color);
                 return (
-                  <Tooltip key={team} label={team} show={collapsed}>
+                  <Tooltip key={team.id} label={team.name} show={collapsed}>
                     <button
-                      onClick={() => handleTeamClick(team)}
+                      onClick={() => handleTeamClick(team.name)}
                       className={cn(
                         'flex items-center w-full rounded-md text-sm transition-colors text-left',
                         collapsed ? 'justify-center p-2' : 'gap-2.5 px-3 py-1.5',
@@ -167,10 +172,10 @@ const Sidebar = ({ open, onClose, collapsed, onToggleCollapse }) => {
                         className="w-5 h-5 rounded text-[10px] font-bold flex items-center justify-center flex-shrink-0"
                         style={{ backgroundColor: colors.bg, color: colors.text }}
                       >
-                        {team[0]}
+                        {team.name[0]}
                       </span>
                       {!collapsed && (
-                        <span className="flex-1 truncate text-[13px]">{team}</span>
+                        <span className="flex-1 truncate text-[13px]">{team.name}</span>
                       )}
                     </button>
                   </Tooltip>

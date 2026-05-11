@@ -54,7 +54,7 @@ const buildTasks = (plans, collapsedSet) => {
 
 const VIEW_MODES = ['Day', 'Week', 'Month', 'Quarter', 'Year'];
 
-const GanttOverview = () => {
+const GanttOverview = ({ teamFilter, departmentFilter }) => {
   const [plans, setPlans]         = useState([]);
   const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState('');
@@ -68,8 +68,15 @@ const GanttOverview = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  const plansWithDates = useMemo(() => plans.filter(p => p.start_date && p.end_date), [plans]);
-  const plansNoDates   = useMemo(() => plans.filter(p => !p.start_date || !p.end_date), [plans]);
+  const filteredPlans = useMemo(() => {
+    let result = plans;
+    if (teamFilter)       result = result.filter(p => p.team === teamFilter);
+    if (departmentFilter) result = result.filter(p => String(p.department_id) === String(departmentFilter));
+    return result;
+  }, [plans, teamFilter, departmentFilter]);
+
+  const plansWithDates = useMemo(() => filteredPlans.filter(p => p.start_date && p.end_date), [filteredPlans]);
+  const plansNoDates   = useMemo(() => filteredPlans.filter(p => !p.start_date || !p.end_date), [filteredPlans]);
   const tasks = useMemo(() => buildTasks(plansWithDates, collapsed), [plansWithDates, collapsed]);
 
   const handleExpanderClick = (task) => {
@@ -125,7 +132,11 @@ const GanttOverview = () => {
         <div className="flex flex-col items-center justify-center py-24 text-center">
           <Calendar className="w-10 h-10 text-[#D1D5DB] mb-4" />
           <p className="text-[14px] font-medium text-[#374151]">No projects with date ranges</p>
-          <p className="text-[13px] text-[#9CA3AF] mt-1">Set start and end dates on your projects to see them on the Gantt chart.</p>
+          <p className="text-[13px] text-[#9CA3AF] mt-1">
+            {(teamFilter || departmentFilter)
+              ? 'No projects match the selected filter with date ranges.'
+              : 'Set start and end dates on your projects to see them on the Gantt chart.'}
+          </p>
         </div>
       )}
     </div>

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo } from 'react';
 
 const DAY_MS = 86400000;
 
@@ -22,14 +22,14 @@ function floorToUnit(date, colMs) {
   return new Date(Math.floor(date.getTime() / colMs) * colMs);
 }
 
-const ROW_H = 40;
+const ROW_H   = 40;
 const LABEL_W = 220;
 
 export default function GanttChart({ tasks = [], viewMode = 'Month', onExpanderClick, ganttHeight = 400 }) {
   const cfg = VIEW_CONFIG[viewMode] ?? VIEW_CONFIG.Month;
 
-  const { timeStart, timeEnd, cols } = useMemo(() => {
-    if (!tasks.length) return { timeStart: new Date(), timeEnd: new Date(), cols: [] };
+  const { timeStart, cols } = useMemo(() => {
+    if (!tasks.length) return { timeStart: new Date(), cols: [] };
     const starts = tasks.map(t => t.start.getTime());
     const ends   = tasks.map(t => t.end.getTime());
     const min = Math.min(...starts);
@@ -42,28 +42,52 @@ export default function GanttChart({ tasks = [], viewMode = 'Month', onExpanderC
       cols.push(new Date(cur));
       cur = new Date(cur.getTime() + cfg.colMs);
     }
-    return { timeStart: ts, timeEnd: te, cols };
+    return { timeStart: ts, cols };
   }, [tasks, cfg]);
 
   const totalW = cols.length * cfg.colWidth;
 
-  const xOf = (date) => {
-    const ms = date.getTime() - timeStart.getTime();
-    return (ms / cfg.colMs) * cfg.colWidth;
-  };
+  const xOf = (date) => (date.getTime() - timeStart.getTime()) / cfg.colMs * cfg.colWidth;
 
-  const today = new Date();
+  const today  = new Date();
   const todayX = xOf(today);
   const showToday = todayX >= 0 && todayX <= totalW;
 
   return (
-    <div className="overflow-auto" style={{ maxHeight: ganttHeight }}>
+    <div style={{ overflow: 'auto', maxHeight: ganttHeight }}>
       <div style={{ display: 'flex', minWidth: LABEL_W + totalW }}>
 
-        {/* ── Label column ── */}
-        <div style={{ width: LABEL_W, flexShrink: 0, borderRight: '1px solid #E8E6E0' }}>
-          {/* header spacer */}
-          <div style={{ height: ROW_H, borderBottom: '1px solid #E8E6E0', background: '#FAFAF8' }} />
+        {/* ── Sticky-left label column ── */}
+        <div style={{
+          width: LABEL_W,
+          flexShrink: 0,
+          position: 'sticky',
+          left: 0,
+          zIndex: 2,
+          borderRight: '1px solid #E8E6E0',
+          background: 'white',
+        }}>
+          {/* Corner cell: sticky top + sticky left */}
+          <div style={{
+            height: ROW_H,
+            position: 'sticky',
+            top: 0,
+            zIndex: 3,
+            background: '#FAFAF8',
+            borderBottom: '1px solid #E8E6E0',
+            display: 'flex',
+            alignItems: 'center',
+            paddingLeft: 12,
+            fontSize: 11,
+            fontWeight: 600,
+            color: '#9CA3AF',
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+          }}>
+            Project / Task
+          </div>
+
+          {/* Label rows */}
           {tasks.map((task, i) => {
             const isProject = task.type === 'project';
             return (
@@ -100,55 +124,72 @@ export default function GanttChart({ tasks = [], viewMode = 'Month', onExpanderC
           })}
         </div>
 
-        {/* ── Timeline ── */}
-        <div style={{ flex: 1, position: 'relative', overflowX: 'auto' }}>
+        {/* ── Timeline column ── */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+
+          {/* Sticky-top timeline header */}
+          <div style={{
+            position: 'sticky',
+            top: 0,
+            zIndex: 1,
+            height: ROW_H,
+            background: '#FAFAF8',
+            borderBottom: '1px solid #E8E6E0',
+            overflow: 'hidden',
+          }}>
+            <svg width={totalW} height={ROW_H} style={{ display: 'block' }}>
+              {cols.map((col, ci) => (
+                <g key={ci}>
+                  <line
+                    x1={ci * cfg.colWidth} y1={0}
+                    x2={ci * cfg.colWidth} y2={ROW_H}
+                    stroke="#E8E6E0" strokeWidth={1}
+                  />
+                  <text
+                    x={ci * cfg.colWidth + cfg.colWidth / 2}
+                    y={ROW_H / 2 + 4}
+                    textAnchor="middle"
+                    fontSize={11}
+                    fill="#9CA3AF"
+                    fontFamily="system-ui, sans-serif"
+                  >
+                    {cfg.fmt(col)}
+                  </text>
+                </g>
+              ))}
+            </svg>
+          </div>
+
+          {/* Timeline bar rows */}
           <svg
             width={totalW}
-            height={ROW_H + tasks.length * ROW_H}
+            height={tasks.length * ROW_H}
             style={{ display: 'block' }}
           >
-            {/* Header row */}
-            <rect x={0} y={0} width={totalW} height={ROW_H} fill="#FAFAF8" />
-            {cols.map((col, ci) => (
-              <g key={ci}>
-                <line x1={ci * cfg.colWidth} y1={0} x2={ci * cfg.colWidth} y2={ROW_H + tasks.length * ROW_H}
-                  stroke="#E8E6E0" strokeWidth={1} />
-                <text
-                  x={ci * cfg.colWidth + cfg.colWidth / 2}
-                  y={ROW_H / 2 + 4}
-                  textAnchor="middle"
-                  fontSize={11}
-                  fill="#9CA3AF"
-                  fontFamily="system-ui, sans-serif"
-                >
-                  {cfg.fmt(col)}
-                </text>
-              </g>
-            ))}
-            <line x1={0} y1={ROW_H} x2={totalW} y2={ROW_H} stroke="#E8E6E0" strokeWidth={1} />
-
-            {/* Rows */}
             {tasks.map((task, i) => {
-              const y = ROW_H + i * ROW_H;
-              const rowBg = i % 2 === 0 ? '#fff' : '#FAFAF8';
-
-              const barX = xOf(task.start);
-              const barW = Math.max(4, xOf(task.end) - barX);
-              const progW = barW * (task.progress / 100);
-              const barY = y + (ROW_H - (task.type === 'project' ? 14 : 20)) / 2;
-              const barH = task.type === 'project' ? 14 : 20;
-              const barR = task.type === 'project' ? 3 : 6;
-
-              const barBg = task.type === 'project' ? '#C7D2FE' : '#D1FAE5';
+              const y      = i * ROW_H;
+              const rowBg  = i % 2 === 0 ? '#fff' : '#FAFAF8';
+              const barX   = xOf(task.start);
+              const barW   = Math.max(4, xOf(task.end) - barX);
+              const progW  = barW * (task.progress / 100);
+              const barH   = task.type === 'project' ? 14 : 20;
+              const barY   = y + (ROW_H - barH) / 2;
+              const barR   = task.type === 'project' ? 3 : 6;
+              const barBg  = task.type === 'project' ? '#C7D2FE' : '#D1FAE5';
               const progColor = task.styles?.progressColor ?? (task.type === 'project' ? '#4F46E5' : '#22C55E');
 
               return (
                 <g key={task.id}>
                   <rect x={0} y={y} width={totalW} height={ROW_H} fill={rowBg} />
                   <line x1={0} y1={y + ROW_H} x2={totalW} y2={y + ROW_H} stroke="#F3F2EF" strokeWidth={1} />
-                  {/* bar background */}
+                  {cols.map((_, ci) => (
+                    <line key={ci}
+                      x1={ci * cfg.colWidth} y1={y}
+                      x2={ci * cfg.colWidth} y2={y + ROW_H}
+                      stroke="#E8E6E0" strokeWidth={0.5}
+                    />
+                  ))}
                   <rect x={barX} y={barY} width={barW} height={barH} rx={barR} fill={barBg} />
-                  {/* progress fill */}
                   {progW > 0 && (
                     <rect x={barX} y={barY} width={progW} height={barH} rx={barR} fill={progColor} />
                   )}
@@ -156,13 +197,16 @@ export default function GanttChart({ tasks = [], viewMode = 'Month', onExpanderC
               );
             })}
 
-            {/* Today line */}
             {showToday && (
-              <line x1={todayX} y1={0} x2={todayX} y2={ROW_H + tasks.length * ROW_H}
-                stroke="#EF4444" strokeWidth={1.5} strokeDasharray="4 3" />
+              <line
+                x1={todayX} y1={0}
+                x2={todayX} y2={tasks.length * ROW_H}
+                stroke="#EF4444" strokeWidth={1.5} strokeDasharray="4 3"
+              />
             )}
           </svg>
         </div>
+
       </div>
     </div>
   );

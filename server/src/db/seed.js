@@ -16,17 +16,41 @@ const admin = db.prepare("SELECT id FROM users WHERE email = 'admin@company.com'
 const pmo   = db.prepare("SELECT id FROM users WHERE email = 'pmo@company.com'").get();
 const dev   = db.prepare("SELECT id FROM users WHERE email = 'dev@company.com'").get();
 
+// Plan Statuses
+const insertStatus = db.prepare('INSERT OR IGNORE INTO plan_statuses (name, label, color, sort_order) VALUES (?, ?, ?, ?)');
+[
+  ['not_started', 'Not Started', 'not_started', 1],
+  ['ongoing',     'Ongoing',     'ongoing',     2],
+  ['on_track',    'On Track',    'on_track',    3],
+  ['at_risk',     'At Risk',     'at_risk',     4],
+  ['completed',   'Completed',   'completed',   5],
+  ['suspended',   'Suspended',   'suspended',   6],
+  ['closed',      'Closed',      'closed',      7],
+].forEach(row => insertStatus.run(...row));
+
+// Teams
+const insertTeam = db.prepare("INSERT OR IGNORE INTO teams (name, color) VALUES (?, ?)");
+[
+  ['DEV1',    'indigo'],
+  ['DEV2',    'green'],
+  ['AI',      'purple'],
+  ['PRODUCT', 'rose'],
+  ['NETWORK', 'cyan'],
+  ['SYSTEM',  'orange'],
+  ['SUPPORT', 'yellow'],
+].forEach(([name, color]) => insertTeam.run(name, color));
+
 // Plans (with team field)
 const insertPlan = db.prepare(
   "INSERT OR IGNORE INTO plans (name, team, owner_id, progress, start_date, end_date, status) VALUES (?, ?, ?, ?, ?, ?, ?)"
 );
-insertPlan.run('Q2 Infrastructure Upgrade', 'INFRA',   pmo.id,   40, '2026-04-01', '2026-06-30', 'on_track');
+insertPlan.run('Q2 Network Infrastructure', 'NETWORK', pmo.id,   40, '2026-04-01', '2026-06-30', 'on_track');
 insertPlan.run('Website Redesign',          'DEV1',    pmo.id,   20, '2026-05-01', '2026-07-31', 'at_risk');
 insertPlan.run('AI Chatbot Integration',    'AI',      admin.id, 10, '2026-05-15', '2026-08-31', 'on_track');
 insertPlan.run('DevOps Pipeline Setup',     'DEV2',    admin.id,  0, '2026-06-01', '2026-09-30', 'on_track');
 insertPlan.run('Product Roadmap Q3',        'PRODUCT', pmo.id,   60, '2026-04-01', '2026-09-30', 'on_track');
 
-const plan1 = db.prepare("SELECT id FROM plans WHERE name = 'Q2 Infrastructure Upgrade'").get();
+const plan1 = db.prepare("SELECT id FROM plans WHERE name = 'Q2 Network Infrastructure'").get();
 const plan2 = db.prepare("SELECT id FROM plans WHERE name = 'Website Redesign'").get();
 const plan3 = db.prepare("SELECT id FROM plans WHERE name = 'AI Chatbot Integration'").get();
 const plan4 = db.prepare("SELECT id FROM plans WHERE name = 'DevOps Pipeline Setup'").get();
@@ -61,11 +85,11 @@ const insertTask = db.prepare(
   'INSERT OR IGNORE INTO tasks (plan_id, name, assigned_to, bucket_id, start_date, finish_date, is_completed, "order") VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
 );
 
-// Plan 1 — INFRA
-insertTask.run(plan1.id, 'Audit current server inventory',  dev.id,   p1done.id, '2026-04-01', '2026-04-10', 1, 0);
-insertTask.run(plan1.id, 'Design new network topology',     pmo.id,   p1prog.id, '2026-04-11', '2026-04-25', 0, 1);
-insertTask.run(plan1.id, 'Procure hardware',                admin.id, p1todo.id, '2026-04-20', '2026-05-15', 0, 2);
-insertTask.run(plan1.id, 'Deploy new servers',              dev.id,   p1todo.id, '2026-05-16', '2026-06-01', 0, 3);
+// Plan 1 — NETWORK
+insertTask.run(plan1.id, 'Audit current network topology',  dev.id,   p1done.id, '2026-04-01', '2026-04-10', 1, 0);
+insertTask.run(plan1.id, 'Design new network architecture', pmo.id,   p1prog.id, '2026-04-11', '2026-04-25', 0, 1);
+insertTask.run(plan1.id, 'Procure network hardware',        admin.id, p1todo.id, '2026-04-20', '2026-05-15', 0, 2);
+insertTask.run(plan1.id, 'Deploy new switches/routers',     dev.id,   p1todo.id, '2026-05-16', '2026-06-01', 0, 3);
 
 // Plan 2 — DEV1
 insertTask.run(plan2.id, 'Gather requirements',             pmo.id,   p2prog.id, '2026-05-01', '2026-05-10', 0, 0);

@@ -4,14 +4,7 @@ import ProgressBar from '../common/ProgressBar';
 import { Badge } from '../ui/badge';
 import { formatDate } from '../../utils/formatDate';
 import { Pencil, Trash2 } from 'lucide-react';
-
-const TEAM_COLORS = {
-  DEV1:    { bg: '#EEF2FF', text: '#4F46E5' },
-  DEV2:    { bg: '#F0FDF4', text: '#16A34A' },
-  INFRA:   { bg: '#FFF7ED', text: '#EA580C' },
-  AI:      { bg: '#FDF4FF', text: '#9333EA' },
-  PRODUCT: { bg: '#FFF1F2', text: '#E11D48' },
-};
+import { getTeamColors } from '../../lib/teamColors';
 
 const PRIORITY_VARIANT = {
   low:      'priority_low',
@@ -25,7 +18,7 @@ const PRIORITY_LABEL = {
 };
 
 const PlanRow = ({ plan, index, onEdit, onDelete, canEdit }) => {
-  const teamColors = plan.team ? (TEAM_COLORS[plan.team] ?? { bg: '#F3F4F6', text: '#6B7280' }) : null;
+  const teamColors = plan.team ? getTeamColors(plan.team_color) : null;
 
   return (
     <tr
