@@ -98,7 +98,7 @@ const SetupTeamPage = () => {
               <Users className="w-4 h-4 text-indigo-500" />
             </div>
             <div>
-              <h1 className="text-2xl font-semibold text-[#1A1A1A]">Setup Teams</h1>
+              <h1 className="text-2xl font-semibold text-[#1A1A1A]">Teams Management</h1>
               <p className="text-[13px] text-[#6B7280] mt-0.5">Manage teams used across projects</p>
             </div>
           </div>

@@ -80,118 +80,128 @@ const UserManagementPage = () => {
   if (loading) return <Spinner text="Loading users…" />;
 
   return (
-    <div className="p-6 max-w-5xl mx-auto w-full">
+    <div className="flex flex-col h-full min-h-0">
 
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-[20px] font-semibold" style={{ color: '#1A1A1A' }}>User Management</h1>
-          <p className="text-[13px] mt-0.5" style={{ color: '#6B7280' }}>
-            {users.length} user{users.length !== 1 ? 's' : ''}
-          </p>
+      {/* Sticky header */}
+      <div className="bg-white border-b border-[#E8E6E0] px-6 py-5 flex-shrink-0">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center">
+              <Users className="w-4 h-4 text-indigo-500" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-semibold text-[#1A1A1A]">User Management</h1>
+              <p className="text-[13px] text-[#6B7280] mt-0.5">
+                {users.length} user{users.length !== 1 ? 's' : ''}
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => { setShowForm(true); setFormError(''); setForm(empty); }}
+          >
+            <Plus className="w-3.5 h-3.5 mr-1.5" />
+            Add User
+          </Button>
         </div>
-        <Button
-          variant="default"
-          size="sm"
-          onClick={() => { setShowForm(true); setFormError(''); setForm(empty); }}
-        >
-          <Plus className="w-3.5 h-3.5 mr-1.5" />
-          Add User
-        </Button>
       </div>
 
-      {error && (
-        <p className="text-[13px] px-3 py-2.5 rounded-lg mb-4"
-          style={{ color: '#991B1B', backgroundColor: '#FEF2F2', border: '1px solid #FECACA' }}>
-          {error}
-        </p>
-      )}
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto p-6">
+        {error && (
+          <p className="text-[13px] px-3 py-2.5 rounded-lg mb-4"
+            style={{ color: '#991B1B', backgroundColor: '#FEF2F2', border: '1px solid #FECACA' }}>
+            {error}
+          </p>
+        )}
 
-      {users.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24 text-center">
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
-            style={{ backgroundColor: '#EEF2FF' }}>
-            <Users className="w-7 h-7" style={{ color: '#4F46E5' }} />
+        {users.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
+              style={{ backgroundColor: '#EEF2FF' }}>
+              <Users className="w-7 h-7" style={{ color: '#4F46E5' }} />
+            </div>
+            <h3 className="text-[15px] font-semibold mb-1" style={{ color: '#1A1A1A' }}>No users yet</h3>
+            <p className="text-[13px]" style={{ color: '#6B7280' }}>Add your first user to get started.</p>
           </div>
-          <h3 className="text-[15px] font-semibold mb-1" style={{ color: '#1A1A1A' }}>No users yet</h3>
-          <p className="text-[13px]" style={{ color: '#6B7280' }}>Add your first user to get started.</p>
-        </div>
-      ) : (
-        <div className="rounded-xl overflow-hidden"
-          style={{ backgroundColor: 'white', border: '1px solid #E8E6E0', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-          <table className="w-full">
-            <thead>
-              <tr style={{ backgroundColor: '#F7F6F3', borderBottom: '1px solid #E8E6E0' }}>
-                {['Name', 'Email', 'Role', 'Created', ''].map((h, i) => (
-                  <th
-                    key={i}
-                    className={`px-4 py-3 text-[11px] font-semibold uppercase tracking-wide ${i < 4 ? 'text-left' : ''}`}
-                    style={{ color: '#9CA3AF' }}
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {users.map(u => {
-                const isMe = u.id === me?.id;
-                return (
-                  <tr
-                    key={u.id}
-                    className="border-b transition-colors duration-100"
-                    style={{ borderColor: '#F3F2EF' }}
-                    onMouseEnter={e => e.currentTarget.style.backgroundColor = '#F7F6F3'}
-                    onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
-                  >
-                    <td className="px-4 py-3.5">
-                      <div className="flex items-center gap-3">
-                        <Avatar name={u.display_name} size="sm" />
-                        <span className="text-[13px] font-medium" style={{ color: '#1A1A1A' }}>{u.display_name}</span>
-                        {isMe && (
-                          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
-                            style={{ backgroundColor: '#EEF2FF', color: '#4F46E5' }}>
-                            You
-                          </span>
+        ) : (
+          <div className="rounded-xl overflow-hidden"
+            style={{ backgroundColor: 'white', border: '1px solid #E8E6E0', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+            <table className="w-full">
+              <thead>
+                <tr style={{ backgroundColor: '#F7F6F3', borderBottom: '1px solid #E8E6E0' }}>
+                  {['Name', 'Email', 'Role', 'Created', ''].map((h, i) => (
+                    <th
+                      key={i}
+                      className={`px-4 py-3 text-[11px] font-semibold uppercase tracking-wide ${i < 4 ? 'text-left' : ''}`}
+                      style={{ color: '#9CA3AF' }}
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {users.map(u => {
+                  const isMe = u.id === me?.id;
+                  return (
+                    <tr
+                      key={u.id}
+                      className="border-b transition-colors duration-100"
+                      style={{ borderColor: '#F3F2EF' }}
+                      onMouseEnter={e => e.currentTarget.style.backgroundColor = '#F7F6F3'}
+                      onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-3">
+                          <Avatar name={u.display_name} size="sm" />
+                          <span className="text-[13px] font-medium" style={{ color: '#1A1A1A' }}>{u.display_name}</span>
+                          {isMe && (
+                            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                              style={{ backgroundColor: '#EEF2FF', color: '#4F46E5' }}>
+                              You
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3.5 text-[13px]" style={{ color: '#6B7280' }}>{u.email}</td>
+                      <td className="px-4 py-3.5">
+                        <Badge variant={ROLE_VARIANTS[u.role] ?? 'outline'}>
+                          {ROLE_LABELS[u.role] ?? u.role}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3.5 text-[13px]" style={{ color: '#6B7280' }}>
+                        {formatDate(u.created_at)}
+                      </td>
+                      <td className="px-4 py-3.5 text-right">
+                        {!isMe && (
+                          <button
+                            onClick={() => setDeleteTarget(u)}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] font-medium rounded-lg transition-colors duration-150"
+                            style={{ color: '#9CA3AF' }}
+                            onMouseEnter={e => {
+                              e.currentTarget.style.color = '#DC2626';
+                              e.currentTarget.style.backgroundColor = '#FEF2F2';
+                            }}
+                            onMouseLeave={e => {
+                              e.currentTarget.style.color = '#9CA3AF';
+                              e.currentTarget.style.backgroundColor = 'transparent';
+                            }}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            Delete
+                          </button>
                         )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3.5 text-[13px]" style={{ color: '#6B7280' }}>{u.email}</td>
-                    <td className="px-4 py-3.5">
-                      <Badge variant={ROLE_VARIANTS[u.role] ?? 'outline'}>
-                        {ROLE_LABELS[u.role] ?? u.role}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3.5 text-[13px]" style={{ color: '#6B7280' }}>
-                      {formatDate(u.created_at)}
-                    </td>
-                    <td className="px-4 py-3.5 text-right">
-                      {!isMe && (
-                        <button
-                          onClick={() => setDeleteTarget(u)}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] font-medium rounded-lg transition-colors duration-150"
-                          style={{ color: '#9CA3AF' }}
-                          onMouseEnter={e => {
-                            e.currentTarget.style.color = '#DC2626';
-                            e.currentTarget.style.backgroundColor = '#FEF2F2';
-                          }}
-                          onMouseLeave={e => {
-                            e.currentTarget.style.color = '#9CA3AF';
-                            e.currentTarget.style.backgroundColor = 'transparent';
-                          }}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          Delete
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
       {/* Add User Modal */}
       {showForm && (

@@ -96,7 +96,7 @@ const DepartmentSetupPage = () => {
               <Building2 className="w-4 h-4 text-indigo-500" />
             </div>
             <div>
-              <h1 className="text-2xl font-semibold text-[#1A1A1A]">Department Setup</h1>
+              <h1 className="text-2xl font-semibold text-[#1A1A1A]">Department Management</h1>
               <p className="text-[13px] text-[#6B7280] mt-0.5">Manage departments for project assignment</p>
             </div>
           </div>

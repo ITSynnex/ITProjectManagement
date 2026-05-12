@@ -128,16 +128,16 @@ const Sidebar = ({ open, onClose, collapsed, onToggleCollapse }) => {
             <NavItem to="/admin/users" icon={Users} label="Users" onClick={onClose} collapsed={collapsed} />
           )}
           {(user?.role === 'it_manager' || user?.role === 'pmo') && (
-            <NavItem to="/admin/operators" icon={UserCircle} label="Setup Operator" onClick={onClose} collapsed={collapsed} />
+            <NavItem to="/admin/operators" icon={UserCircle} label="Operator" onClick={onClose} collapsed={collapsed} />
           )}
           {(user?.role === 'it_manager' || user?.role === 'pmo') && (
-            <NavItem to="/admin/departments" icon={Building2} label="Setup Department" onClick={onClose} collapsed={collapsed} />
+            <NavItem to="/admin/departments" icon={Building2} label="Department" onClick={onClose} collapsed={collapsed} />
           )}
           {(user?.role === 'it_manager' || user?.role === 'pmo') && (
-            <NavItem to="/admin/teams" icon={UsersRound} label="Setup Teams" onClick={onClose} collapsed={collapsed} />
+            <NavItem to="/admin/teams" icon={UsersRound} label="Teams" onClick={onClose} collapsed={collapsed} />
           )}
           {(user?.role === 'it_manager' || user?.role === 'pmo') && (
-            <NavItem to="/admin/statuses" icon={Tag} label="Setup Status" onClick={onClose} collapsed={collapsed} />
+            <NavItem to="/admin/statuses" icon={Tag} label="Status" onClick={onClose} collapsed={collapsed} />
           )}
 
           {/* Separator */}

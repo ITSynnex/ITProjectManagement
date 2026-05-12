@@ -109,7 +109,7 @@ const SetupStatusPage = () => {
               <Tag className="w-4 h-4 text-indigo-500" />
             </div>
             <div>
-              <h1 className="text-2xl font-semibold text-[#1A1A1A]">Setup Status</h1>
+              <h1 className="text-2xl font-semibold text-[#1A1A1A]">Status Management</h1>
               <p className="text-[13px] text-[#6B7280] mt-0.5">Manage project status values</p>
             </div>
           </div>
