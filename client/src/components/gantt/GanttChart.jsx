@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 
 const DAY_MS = 86400000;
+const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 const VIEW_CONFIG = {
   Day:     { colMs: DAY_MS,        colWidth: 40,  fmt: d => d.toLocaleDateString('en', { month:'short', day:'numeric' }) },
@@ -22,11 +23,16 @@ function floorToUnit(date, colMs) {
   return new Date(Math.floor(date.getTime() / colMs) * colMs);
 }
 
-const ROW_H   = 40;
-const LABEL_W = 220;
+const ROW_H    = 40;
+const LABEL_W  = 220;
+const MONTH_ROW_H = 22;
+const DAY_ROW_H   = 26;
+const DAY_HEADER_H = MONTH_ROW_H + DAY_ROW_H; // 48 total for Day view
 
 export default function GanttChart({ tasks = [], viewMode = 'Month', onExpanderClick, ganttHeight = 400 }) {
   const cfg = VIEW_CONFIG[viewMode] ?? VIEW_CONFIG.Month;
+  const isDay = viewMode === 'Day';
+  const headerH = isDay ? DAY_HEADER_H : ROW_H;
 
   const { timeStart, cols } = useMemo(() => {
     if (!tasks.length) return { timeStart: new Date(), cols: [] };
@@ -45,6 +51,26 @@ export default function GanttChart({ tasks = [], viewMode = 'Month', onExpanderC
     return { timeStart: ts, cols };
   }, [tasks, cfg]);
 
+  /* Month groups for Day view merged header */
+  const monthGroups = useMemo(() => {
+    if (!isDay) return [];
+    const groups = [];
+    cols.forEach((col, ci) => {
+      const key = `${col.getFullYear()}-${col.getMonth()}`;
+      if (!groups.length || groups[groups.length - 1].key !== key) {
+        groups.push({
+          key,
+          label: col.toLocaleDateString('en', { month: 'short', year: 'numeric' }),
+          startIdx: ci,
+          count: 1,
+        });
+      } else {
+        groups[groups.length - 1].count++;
+      }
+    });
+    return groups;
+  }, [cols, isDay]);
+
   const totalW = cols.length * cfg.colWidth;
 
   const xOf = (date) => (date.getTime() - timeStart.getTime()) / cfg.colMs * cfg.colWidth;
@@ -52,6 +78,8 @@ export default function GanttChart({ tasks = [], viewMode = 'Month', onExpanderC
   const today  = new Date();
   const todayX = xOf(today);
   const showToday = todayX >= 0 && todayX <= totalW;
+
+  const isWeekend = (col) => { const d = col.getDay(); return d === 0 || d === 6; };
 
   return (
     <div style={{ overflow: 'auto', maxHeight: ganttHeight }}>
@@ -67,9 +95,9 @@ export default function GanttChart({ tasks = [], viewMode = 'Month', onExpanderC
           borderRight: '1px solid #E8E6E0',
           background: 'white',
         }}>
-          {/* Corner cell: sticky top + sticky left */}
+          {/* Corner cell */}
           <div style={{
-            height: ROW_H,
+            height: headerH,
             position: 'sticky',
             top: 0,
             zIndex: 3,
@@ -132,32 +160,106 @@ export default function GanttChart({ tasks = [], viewMode = 'Month', onExpanderC
             position: 'sticky',
             top: 0,
             zIndex: 1,
-            height: ROW_H,
+            height: headerH,
             background: '#FAFAF8',
             borderBottom: '1px solid #E8E6E0',
             overflow: 'hidden',
           }}>
-            <svg width={totalW} height={ROW_H} style={{ display: 'block' }}>
-              {cols.map((col, ci) => (
-                <g key={ci}>
-                  <line
-                    x1={ci * cfg.colWidth} y1={0}
-                    x2={ci * cfg.colWidth} y2={ROW_H}
-                    stroke="#E8E6E0" strokeWidth={1}
+            {isDay ? (
+              /* ── Day view: 2-row header ── */
+              <svg width={totalW} height={headerH} style={{ display: 'block' }}>
+                {/* Weekend column highlights in header */}
+                {cols.map((col, ci) => isWeekend(col) && (
+                  <rect key={`wh-${ci}`}
+                    x={ci * cfg.colWidth} y={0}
+                    width={cfg.colWidth} height={headerH}
+                    fill="rgba(79,70,229,0.05)"
                   />
-                  <text
-                    x={ci * cfg.colWidth + cfg.colWidth / 2}
-                    y={ROW_H / 2 + 4}
-                    textAnchor="middle"
-                    fontSize={11}
-                    fill="#9CA3AF"
-                    fontFamily="system-ui, sans-serif"
-                  >
-                    {cfg.fmt(col)}
-                  </text>
-                </g>
-              ))}
-            </svg>
+                ))}
+
+                {/* Row 1: merged month labels */}
+                {monthGroups.map((g, gi) => {
+                  const x = g.startIdx * cfg.colWidth;
+                  const w = g.count * cfg.colWidth;
+                  return (
+                    <g key={gi}>
+                      <line x1={x} y1={0} x2={x} y2={MONTH_ROW_H} stroke="#E8E6E0" strokeWidth={1} />
+                      <text
+                        x={x + w / 2}
+                        y={MONTH_ROW_H / 2 + 4}
+                        textAnchor="middle"
+                        fontSize={11}
+                        fontWeight={600}
+                        fill="#374151"
+                        fontFamily="system-ui, sans-serif"
+                      >
+                        {g.label}
+                      </text>
+                    </g>
+                  );
+                })}
+
+                {/* Divider between month row and day row */}
+                <line x1={0} y1={MONTH_ROW_H} x2={totalW} y2={MONTH_ROW_H} stroke="#E8E6E0" strokeWidth={1} />
+
+                {/* Row 2: day number + day name */}
+                {cols.map((col, ci) => {
+                  const weekend = isWeekend(col);
+                  const x = ci * cfg.colWidth;
+                  return (
+                    <g key={ci}>
+                      <line x1={x} y1={MONTH_ROW_H} x2={x} y2={headerH} stroke="#E8E6E0" strokeWidth={1} />
+                      {/* day number */}
+                      <text
+                        x={x + cfg.colWidth / 2}
+                        y={MONTH_ROW_H + 10}
+                        textAnchor="middle"
+                        fontSize={11}
+                        fontWeight={weekend ? 600 : 400}
+                        fill={weekend ? '#6366F1' : '#6B7280'}
+                        fontFamily="system-ui, sans-serif"
+                      >
+                        {col.getDate()}
+                      </text>
+                      {/* day name */}
+                      <text
+                        x={x + cfg.colWidth / 2}
+                        y={MONTH_ROW_H + 22}
+                        textAnchor="middle"
+                        fontSize={9}
+                        fill={weekend ? '#818CF8' : '#9CA3AF'}
+                        fontFamily="system-ui, sans-serif"
+                      >
+                        {DAY_NAMES[col.getDay()]}
+                      </text>
+                    </g>
+                  );
+                })}
+              </svg>
+            ) : (
+              /* ── Other views: single-row header ── */
+              <svg width={totalW} height={ROW_H} style={{ display: 'block' }}>
+                {cols.map((col, ci) => (
+                  <g key={ci}>
+                    <line
+                      x1={ci * cfg.colWidth} y1={0}
+                      x2={ci * cfg.colWidth} y2={ROW_H}
+                      stroke="#E8E6E0" strokeWidth={1}
+                    />
+                    <text
+                      x={ci * cfg.colWidth + cfg.colWidth / 2}
+                      y={ROW_H / 2 + 4}
+                      textAnchor="middle"
+                      fontSize={11}
+                      fill="#9CA3AF"
+                      fontFamily="system-ui, sans-serif"
+                    >
+                      {cfg.fmt(col)}
+                    </text>
+                  </g>
+                ))}
+              </svg>
+            )}
           </div>
 
           {/* Timeline bar rows */}
@@ -181,6 +283,16 @@ export default function GanttChart({ tasks = [], viewMode = 'Month', onExpanderC
               return (
                 <g key={task.id}>
                   <rect x={0} y={y} width={totalW} height={ROW_H} fill={rowBg} />
+
+                  {/* Weekend column highlights in body */}
+                  {isDay && cols.map((col, ci) => isWeekend(col) && (
+                    <rect key={`wb-${ci}`}
+                      x={ci * cfg.colWidth} y={y}
+                      width={cfg.colWidth} height={ROW_H}
+                      fill="rgba(79,70,229,0.04)"
+                    />
+                  ))}
+
                   <line x1={0} y1={y + ROW_H} x2={totalW} y2={y + ROW_H} stroke="#F3F2EF" strokeWidth={1} />
                   {cols.map((_, ci) => (
                     <line key={ci}

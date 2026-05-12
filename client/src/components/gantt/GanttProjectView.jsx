@@ -113,7 +113,7 @@ const GanttProjectView = ({ plan, tasks, buckets }) => {
         <GanttChart
           tasks={ganttTasks}
           viewMode={viewMode}
-          ganttHeight={Math.min(500, ganttTasks.length * 40 + 60)}
+          ganttHeight={Math.min(500, ganttTasks.length * 40 + (viewMode === 'Day' ? 68 : 60))}
         />
       </div>
     </div>

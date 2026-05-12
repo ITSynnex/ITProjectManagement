@@ -125,7 +125,7 @@ const GanttOverview = ({ teamFilter, departmentFilter }) => {
             tasks={tasks}
             viewMode={viewMode}
             onExpanderClick={handleExpanderClick}
-            ganttHeight={Math.min(600, tasks.length * 40 + 60)}
+            ganttHeight={Math.min(600, tasks.length * 40 + (viewMode === 'Day' ? 68 : 60))}
           />
         </div>
       ) : (
