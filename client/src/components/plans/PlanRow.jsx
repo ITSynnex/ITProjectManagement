@@ -31,6 +31,8 @@ const PlanRow = ({ plan, index, onEdit, onDelete, canEdit }) => {
       <td className="px-4 py-3.5">
         <Link
           to={`/plans/${plan.id}`}
+          target="_blank"
+          rel="noopener noreferrer"
           className="text-sm font-medium hover:underline underline-offset-2 transition-colors"
           style={{ color: '#4F46E5' }}
           onMouseEnter={e => e.currentTarget.style.color = '#4338CA'}
