@@ -18,6 +18,7 @@ const badgeVariants = cva(
         not_started: 'bg-gray-100 text-gray-600 ring-gray-200',
         ongoing:     'bg-indigo-50 text-indigo-700 ring-indigo-200',
         suspended:   'bg-orange-50 text-orange-700 ring-orange-200',
+        off_track:   'bg-orange-50 text-orange-700 ring-orange-200',
         outline:          'bg-transparent text-gray-600 ring-gray-300',
         priority_low:     'bg-blue-50 text-blue-700 ring-blue-200',
         priority_medium:  'bg-yellow-50 text-yellow-700 ring-yellow-200',

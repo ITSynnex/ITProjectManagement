@@ -58,7 +58,7 @@ const ViewByOperator = ({ plans, canEdit, onEdit, onDelete }) => {
               <table className="w-full">
                 <thead>
                   <tr style={{ backgroundColor: '#FAFAF8', borderBottom: '1px solid #E8E6E0' }}>
-                    {['#', 'Project Name', 'Team', 'Operator', 'Progress', 'Start', 'End', 'Status', 'Priority'].map(h => (
+                    {['#', 'Project Name', 'Team', 'Operator', 'Progress', 'Start', 'End', 'Status', 'Health', 'Priority'].map(h => (
                       <th key={h} className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-[#9CA3AF]">
                         {h}
                       </th>

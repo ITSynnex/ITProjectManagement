@@ -40,6 +40,16 @@ CREATE TABLE IF NOT EXISTS plan_statuses (
   created_at TEXT DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS plan_health (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  name       TEXT NOT NULL UNIQUE,
+  label      TEXT NOT NULL,
+  color      TEXT NOT NULL DEFAULT 'default',
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  is_active  INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS plans (
   id            INTEGER PRIMARY KEY AUTOINCREMENT,
   name          TEXT NOT NULL,

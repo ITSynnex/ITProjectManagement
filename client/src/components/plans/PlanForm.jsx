@@ -5,6 +5,7 @@ import { Input } from '../ui/input';
 import { cn } from '../../lib/utils';
 import { getActiveTeams } from '../../api/teams.api';
 import { getActivePlanStatuses } from '../../api/planStatuses.api';
+import { getActivePlanHealth } from '../../api/planHealth.api';
 
 const PRIORITIES = [
   { value: 'low',      label: 'Low',      active: 'bg-blue-50 text-blue-700 border-blue-400',   dot: 'bg-blue-400' },
@@ -13,7 +14,7 @@ const PRIORITIES = [
   { value: 'critical', label: 'Critical', active: 'bg-red-50 text-red-700 border-red-500',      dot: 'bg-red-500' },
 ];
 
-const empty = { name: '', team: '', operator_id: '', start_date: '', end_date: '', status: '', department_id: '', priority: '' };
+const empty = { name: '', team: '', operator_id: '', start_date: '', end_date: '', status: '', health: '', department_id: '', priority: '' };
 
 const Label = ({ children, required }) => (
   <label className="block text-[13px] font-medium text-[#374151] mb-1.5">
@@ -25,12 +26,14 @@ const PlanForm = ({ open, onClose, onSave, initial, operators = [], departments 
   const [form, setForm]     = useState(empty);
   const [error, setError]   = useState('');
   const [saving, setSaving] = useState(false);
-  const [teams, setTeams]       = useState([]);
+  const [teams, setTeams]     = useState([]);
   const [statuses, setStatuses] = useState([]);
+  const [healths, setHealths]   = useState([]);
 
   useEffect(() => {
     getActiveTeams().then(r => setTeams(r.data)).catch(() => {});
     getActivePlanStatuses().then(r => setStatuses(r.data)).catch(() => {});
+    getActivePlanHealth().then(r => setHealths(r.data)).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -41,6 +44,7 @@ const PlanForm = ({ open, onClose, onSave, initial, operators = [], departments 
       start_date:    initial.start_date    ?? '',
       end_date:      initial.end_date      ?? '',
       status:        initial.status        ?? '',
+      health:        initial.health        ?? '',
       department_id: initial.department_id ?? '',
       priority:      initial.priority      ?? '',
     } : empty);
@@ -61,6 +65,7 @@ const PlanForm = ({ open, onClose, onSave, initial, operators = [], departments 
         operator_id:   form.operator_id   ? Number(form.operator_id)   : null,
         team:          form.team          || null,
         status:        form.status        || null,
+        health:        form.health        || null,
         department_id: form.department_id ? Number(form.department_id) : undefined,
         priority:      form.priority || null,
       });
@@ -146,12 +151,21 @@ const PlanForm = ({ open, onClose, onSave, initial, operators = [], departments 
           </div>
         </div>
 
-        <div>
-          <Label>Status</Label>
-          <select value={form.status} onChange={set('status')} className={selectClass}>
-            <option value="">— No status —</option>
-            {statuses.map(s => <option key={s.name} value={s.name}>{s.label}</option>)}
-          </select>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label>Status</Label>
+            <select value={form.status} onChange={set('status')} className={selectClass}>
+              <option value="">— No status —</option>
+              {statuses.map(s => <option key={s.name} value={s.name}>{s.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <Label>Health</Label>
+            <select value={form.health} onChange={set('health')} className={selectClass}>
+              <option value="">— No health —</option>
+              {healths.map(h => <option key={h.name} value={h.name}>{h.label}</option>)}
+            </select>
+          </div>
         </div>
 
         <div className="flex justify-end gap-3 pt-2">

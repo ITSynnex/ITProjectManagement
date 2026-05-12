@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import StatusBadge from '../common/StatusBadge';
+import HealthBadge from '../common/HealthBadge';
 import ProgressBar from '../common/ProgressBar';
 import { Badge } from '../ui/badge';
 import { formatDate } from '../../utils/formatDate';
@@ -72,6 +73,10 @@ const PlanRow = ({ plan, index, onEdit, onDelete, canEdit }) => {
 
       <td className="px-4 py-3.5">
         <StatusBadge status={plan.status} />
+      </td>
+
+      <td className="px-4 py-3.5">
+        <HealthBadge health={plan.health} />
       </td>
 
       <td className="px-4 py-3.5">

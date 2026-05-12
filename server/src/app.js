@@ -9,6 +9,7 @@ const operatorsRoutes   = require('./modules/operators/operators.routes');
 const departmentsRoutes = require('./modules/departments/departments.routes');
 const teamsRoutes         = require('./modules/teams/teams.routes');
 const planStatusesRoutes  = require('./modules/plan-statuses/planStatuses.routes');
+const planHealthRoutes    = require('./modules/plan-health/planHealth.routes');
 const plansRoutes         = require('./modules/plans/plans.routes');
 const bucketsRouter     = require('./modules/buckets/buckets.routes');
 const tasksRoutes       = require('./modules/tasks/tasks.routes');
@@ -25,6 +26,7 @@ app.use('/api/operators',   operatorsRoutes);
 app.use('/api/departments', departmentsRoutes);
 app.use('/api/teams',          teamsRoutes);
 app.use('/api/plan-statuses',  planStatusesRoutes);
+app.use('/api/plan-health',    planHealthRoutes);
 app.use('/api/plans',          plansRoutes);
 
 // Nested routes: /api/plans/:planId/buckets and /api/plans/:planId/tasks

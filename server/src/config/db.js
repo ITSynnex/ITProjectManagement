@@ -117,4 +117,33 @@ try {
   }
 } catch (e) { console.error('plan_statuses migration error:', e.message); }
 
+// Migration: add health column to plans
+try { db.exec("ALTER TABLE plans ADD COLUMN health TEXT"); } catch (_) {}
+
+// Migration: create plan_health table and seed if empty
+try {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS plan_health (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      name       TEXT NOT NULL UNIQUE,
+      label      TEXT NOT NULL,
+      color      TEXT NOT NULL DEFAULT 'default',
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      is_active  INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT DEFAULT (datetime('now'))
+    )
+  `);
+  const count = db.prepare('SELECT COUNT(*) as n FROM plan_health').get();
+  if (count.n === 0) {
+    const ins = db.prepare('INSERT OR IGNORE INTO plan_health (name, label, color, sort_order) VALUES (?, ?, ?, ?)');
+    [
+      ['on_track',  'On Track',  'on_track',        1],
+      ['at_risk',   'At Risk',   'at_risk',          2],
+      ['off_track', 'Off Track', 'off_track',        3],
+      ['critical',  'Critical',  'priority_critical', 4],
+      ['n_a',       'N/A',       'default',          5],
+    ].forEach(row => ins.run(...row));
+  }
+} catch (e) { console.error('plan_health migration error:', e.message); }
+
 module.exports = db;

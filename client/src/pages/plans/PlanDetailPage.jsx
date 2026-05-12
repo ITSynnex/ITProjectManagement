@@ -7,6 +7,8 @@ import { getUsers } from '../../api/users.api';
 import { getActiveDepartments } from '../../api/departments.api';
 import { getActiveOperators } from '../../api/operators.api';
 import { getActivePlanStatuses } from '../../api/planStatuses.api';
+import { getActivePlanHealth } from '../../api/planHealth.api';
+import HealthBadge from '../../components/common/HealthBadge';
 import PlanForm from '../../components/plans/PlanForm';
 import { TaskTable, effectiveStatus } from '../../components/tasks/TaskTable';
 import BoardView from '../../components/tasks/BoardView';
@@ -50,6 +52,7 @@ const PlanDetailPage = () => {
   const [operators, setOperators]     = useState([]);
   const [departments, setDepartments] = useState([]);
   const [planStatuses, setPlanStatuses] = useState([]);
+  const [planHealths, setPlanHealths]   = useState([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState('');
   const [detailTab, setDetailTab] = useState('Tasks');
@@ -68,15 +71,16 @@ const PlanDetailPage = () => {
     const loadAll = async () => {
       setLoading(true);
       try {
-        const requests = [getPlan(id), getTasks(id), getBuckets(id), getActiveDepartments(), getActiveOperators(), getActivePlanStatuses()];
+        const requests = [getPlan(id), getTasks(id), getBuckets(id), getActiveDepartments(), getActiveOperators(), getActivePlanStatuses(), getActivePlanHealth()];
         if (user?.role === 'it_manager' || user?.role === 'pmo') requests.push(getUsers());
-        const [planRes, taskRes, bucketRes, deptsRes, opsRes, statusesRes, userRes] = await Promise.all(requests);
+        const [planRes, taskRes, bucketRes, deptsRes, opsRes, statusesRes, healthRes, userRes] = await Promise.all(requests);
         setPlan(planRes.data);
         setTasks(taskRes.data);
         setBuckets(bucketRes.data);
         setDepartments(deptsRes.data);
         setOperators(opsRes.data);
         setPlanStatuses(statusesRes.data);
+        setPlanHealths(healthRes.data);
         if (userRes) setUsers(userRes.data);
       } catch {
         setError('Failed to load project.');
@@ -176,6 +180,10 @@ const PlanDetailPage = () => {
     ? (planStatuses.find(s => s.name === plan.status) ?? { color: 'default', label: plan.status })
     : null;
 
+  const planHealthCfg = plan.health
+    ? (planHealths.find(h => h.name === plan.health) ?? { color: 'default', label: plan.health })
+    : null;
+
   return (
     <div className="flex flex-col h-full min-h-0">
 
@@ -200,6 +208,9 @@ const PlanDetailPage = () => {
               <h1 className="text-2xl font-semibold text-[#1A1A1A]">{plan.name}</h1>
               {planStatusCfg && (
                 <Badge variant={planStatusCfg.color}>{planStatusCfg.label}</Badge>
+              )}
+              {planHealthCfg && (
+                <Badge variant={planHealthCfg.color}>{planHealthCfg.label}</Badge>
               )}
             </div>
             <div className="flex items-center gap-4 text-[13px] text-[#6B7280] flex-wrap">

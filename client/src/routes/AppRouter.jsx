@@ -9,6 +9,7 @@ import SetupOperatorPage from '../pages/admin/SetupOperatorPage';
 import DepartmentSetupPage from '../pages/admin/DepartmentSetupPage';
 import SetupTeamPage from '../pages/admin/SetupTeamPage';
 import SetupStatusPage from '../pages/admin/SetupStatusPage';
+import SetupHealthPage from '../pages/admin/SetupHealthPage';
 
 const AppRouter = () => (
   <BrowserRouter>
@@ -32,6 +33,9 @@ const AppRouter = () => (
         } />
         <Route path="admin/statuses" element={
           <ProtectedRoute roles={['it_manager', 'pmo']}><SetupStatusPage /></ProtectedRoute>
+        } />
+        <Route path="admin/health" element={
+          <ProtectedRoute roles={['it_manager', 'pmo']}><SetupHealthPage /></ProtectedRoute>
         } />
         <Route path="*" element={<Navigate to="/plans" replace />} />
       </Route>

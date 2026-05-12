@@ -3,7 +3,7 @@ import { NavLink, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
   LayoutDashboard, FolderKanban, Users, Settings,
-  ChevronLeft, ChevronRight, UserCircle, Building2, UsersRound, Tag,
+  ChevronLeft, ChevronRight, UserCircle, Building2, UsersRound, Tag, Heart,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { getActiveDepartments } from '../../api/departments.api';
@@ -138,6 +138,9 @@ const Sidebar = ({ open, onClose, collapsed, onToggleCollapse }) => {
           )}
           {(user?.role === 'it_manager' || user?.role === 'pmo') && (
             <NavItem to="/admin/statuses" icon={Tag} label="Status" onClick={onClose} collapsed={collapsed} />
+          )}
+          {(user?.role === 'it_manager' || user?.role === 'pmo') && (
+            <NavItem to="/admin/health" icon={Heart} label="Health" onClick={onClose} collapsed={collapsed} />
           )}
 
           {/* Separator */}

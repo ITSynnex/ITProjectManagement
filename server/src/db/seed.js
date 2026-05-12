@@ -16,6 +16,16 @@ const admin = db.prepare("SELECT id FROM users WHERE email = 'admin@company.com'
 const pmo   = db.prepare("SELECT id FROM users WHERE email = 'pmo@company.com'").get();
 const dev   = db.prepare("SELECT id FROM users WHERE email = 'dev@company.com'").get();
 
+// Plan Health
+const insertHealth = db.prepare('INSERT OR IGNORE INTO plan_health (name, label, color, sort_order) VALUES (?, ?, ?, ?)');
+[
+  ['on_track',  'On Track',  'on_track',         1],
+  ['at_risk',   'At Risk',   'at_risk',           2],
+  ['off_track', 'Off Track', 'off_track',         3],
+  ['critical',  'Critical',  'priority_critical', 4],
+  ['n_a',       'N/A',       'default',           5],
+].forEach(row => insertHealth.run(...row));
+
 // Plan Statuses
 const insertStatus = db.prepare('INSERT OR IGNORE INTO plan_statuses (name, label, color, sort_order) VALUES (?, ?, ?, ?)');
 [
