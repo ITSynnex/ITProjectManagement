@@ -34,9 +34,9 @@ for (const sql of migrations) {
 try {
   const tableInfo = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='users'").get();
   if (tableInfo && tableInfo.sql.includes("dev_operation")) {
-    db.pragma('foreign_keys = OFF');
-    db.exec("DROP TABLE IF EXISTS users_new");
+    db.exec("PRAGMA foreign_keys = OFF");
     db.exec("UPDATE users SET role = 'operator' WHERE role = 'dev_operation'");
+    db.exec("DROP TABLE IF EXISTS users_new");
     db.exec(`CREATE TABLE users_new (
       id           INTEGER PRIMARY KEY AUTOINCREMENT,
       email        TEXT NOT NULL UNIQUE,
@@ -49,7 +49,8 @@ try {
     db.exec("INSERT INTO users_new SELECT id, email, display_name, password, role, avatar_url, created_at FROM users");
     db.exec("DROP TABLE users");
     db.exec("ALTER TABLE users_new RENAME TO users");
-    db.pragma('foreign_keys = ON');
+    db.exec("PRAGMA foreign_keys = ON");
+    console.log('users role migration completed successfully');
   }
 } catch (e) { console.error('users role migration error:', e.message); }
 
