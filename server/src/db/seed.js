@@ -10,7 +10,7 @@ const insertUser = db.prepare(
 );
 insertUser.run('admin@company.com', 'IT Manager',    hash('password123'), 'it_manager');
 insertUser.run('pmo@company.com',   'PMO User',      hash('password123'), 'pmo');
-insertUser.run('dev@company.com',   'Dev Operator',  hash('password123'), 'dev_operation');
+insertUser.run('dev@company.com',   'Dev Operator',  hash('password123'), 'operator');
 
 const admin = db.prepare("SELECT id FROM users WHERE email = 'admin@company.com'").get();
 const pmo   = db.prepare("SELECT id FROM users WHERE email = 'pmo@company.com'").get();

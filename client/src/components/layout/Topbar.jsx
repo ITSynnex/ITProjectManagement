@@ -2,11 +2,12 @@ import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, Menu } from 'lucide-react';
 
-const ROLE_LABELS = { it_manager: 'IT Manager', pmo: 'PMO', dev_operation: 'Dev Operation' };
+const ROLE_LABELS = { it_manager: 'IT Manager', pmo: 'PMO', operator: 'Operator', user: 'User' };
 const ROLE_COLORS = {
-  it_manager:    { bg: '#F5F3FF', text: '#7C3AED' },
-  pmo:           { bg: '#EEF2FF', text: '#4F46E5' },
-  dev_operation: { bg: '#F3F4F6', text: '#6B7280' },
+  it_manager: { bg: '#F5F3FF', text: '#7C3AED' },
+  pmo:        { bg: '#EEF2FF', text: '#4F46E5' },
+  operator:   { bg: '#F0FDF4', text: '#16A34A' },
+  user:       { bg: '#F3F4F6', text: '#6B7280' },
 };
 
 const initials = (name = '') =>
@@ -15,7 +16,7 @@ const initials = (name = '') =>
 const Topbar = ({ onMenuClick }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const rc = ROLE_COLORS[user?.role] ?? ROLE_COLORS.dev_operation;
+  const rc = ROLE_COLORS[user?.role] ?? ROLE_COLORS.user;
 
   return (
     <header className="h-14 bg-white border-b border-[#E8E6E0] flex items-center px-4 gap-3 flex-shrink-0">

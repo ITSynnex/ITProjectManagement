@@ -53,7 +53,7 @@ const create = (planId, data) => {
 };
 
 const update = (id, data, userRole) => {
-  if (userRole === 'dev_operation') return { error: 'Forbidden', status: 403 };
+  if (!['it_manager', 'pmo'].includes(userRole)) return { error: 'Forbidden', status: 403 };
   const task = db.prepare('SELECT id, plan_id FROM tasks WHERE id = ?').get(id);
   if (!task) return { error: 'Task not found', status: 404 };
 
@@ -70,7 +70,7 @@ const update = (id, data, userRole) => {
 };
 
 const toggleComplete = (id, userRole) => {
-  if (userRole === 'dev_operation') return { error: 'Forbidden', status: 403 };
+  if (!['it_manager', 'pmo'].includes(userRole)) return { error: 'Forbidden', status: 403 };
   const task = db.prepare('SELECT id, plan_id, is_completed FROM tasks WHERE id = ?').get(id);
   if (!task) return { error: 'Task not found', status: 404 };
   const newVal = task.is_completed ? 0 : 1;
@@ -80,7 +80,7 @@ const toggleComplete = (id, userRole) => {
 };
 
 const remove = (id, userRole) => {
-  if (userRole === 'dev_operation') return { error: 'Forbidden', status: 403 };
+  if (!['it_manager', 'pmo'].includes(userRole)) return { error: 'Forbidden', status: 403 };
   const task = db.prepare('SELECT id, plan_id FROM tasks WHERE id = ?').get(id);
   if (!task) return { error: 'Task not found', status: 404 };
   db.prepare('DELETE FROM tasks WHERE id = ?').run(id);

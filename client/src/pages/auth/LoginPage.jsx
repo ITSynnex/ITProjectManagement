@@ -26,8 +26,6 @@ const LoginPage = () => {
     }
   };
 
-  const fill = (email) => setForm({ email, password: 'password123' });
-
   const inputBase = {
     border: '1px solid #E8E6E0',
     color: '#1A1A1A',
@@ -160,34 +158,6 @@ const LoginPage = () => {
             </button>
           </form>
 
-          {/* Demo accounts */}
-          <div className="mt-7 pt-6" style={{ borderTop: '1px solid #E8E6E0' }}>
-            <p className="text-[11px] font-semibold uppercase tracking-wider mb-3" style={{ color: '#9CA3AF' }}>
-              Demo accounts
-            </p>
-            <div className="space-y-1">
-              {[
-                { email: 'admin@company.com', label: 'IT Manager',    color: '#7C3AED', bg: '#F3E8FF' },
-                { email: 'pmo@company.com',   label: 'PMO',           color: '#4F46E5', bg: '#EEF2FF' },
-                { email: 'dev@company.com',   label: 'Dev Operation', color: '#4B5563', bg: '#F3F4F6' },
-              ].map(({ email, label, color, bg }) => (
-                <button
-                  key={email}
-                  type="button"
-                  onClick={() => fill(email)}
-                  className="flex items-center justify-between w-full px-3 py-2 rounded-lg transition-colors duration-150"
-                  onMouseEnter={e => e.currentTarget.style.backgroundColor = '#F7F6F3'}
-                  onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
-                >
-                  <span className="text-[11px] font-medium px-2 py-0.5 rounded-full"
-                    style={{ backgroundColor: bg, color }}>
-                    {label}
-                  </span>
-                  <span className="text-[11px]" style={{ color: '#9CA3AF' }}>{email}</span>
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
     </div>

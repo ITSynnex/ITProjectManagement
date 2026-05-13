@@ -11,11 +11,11 @@ import { formatDate } from '../../utils/formatDate';
 import { useAuth } from '../../context/AuthContext';
 import { Plus, Users, Trash2 } from 'lucide-react';
 
-const ROLES = ['it_manager', 'pmo', 'dev_operation'];
-const ROLE_LABELS = { it_manager: 'IT Manager', pmo: 'PMO', dev_operation: 'Dev Operation' };
-const ROLE_VARIANTS = { it_manager: 'default', pmo: 'primary', dev_operation: 'outline' };
+const ROLES = ['it_manager', 'pmo', 'operator', 'user'];
+const ROLE_LABELS = { it_manager: 'IT Manager', pmo: 'PMO', operator: 'Operator', user: 'User' };
+const ROLE_VARIANTS = { it_manager: 'default', pmo: 'primary', operator: 'on_track', user: 'outline' };
 
-const empty = { display_name: '', email: '', password: '', role: 'pmo' };
+const empty = { display_name: '', email: '', password: '', role: 'operator' };
 
 const Label = ({ children, required }) => (
   <label className="block text-[13px] font-medium mb-1.5" style={{ color: '#374151' }}>

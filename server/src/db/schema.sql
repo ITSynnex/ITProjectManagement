@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS users (
   email        TEXT NOT NULL UNIQUE,
   display_name TEXT NOT NULL,
   password     TEXT NOT NULL,
-  role         TEXT NOT NULL CHECK(role IN ('it_manager','pmo','dev_operation')),
+  role         TEXT NOT NULL CHECK(role IN ('it_manager','pmo','operator','user')),
   avatar_url   TEXT,
   created_at   TEXT DEFAULT (datetime('now'))
 );
