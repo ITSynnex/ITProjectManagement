@@ -35,7 +35,6 @@ try {
   const tableInfo = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='users'").get();
   if (tableInfo && tableInfo.sql.includes("dev_operation")) {
     db.exec("PRAGMA foreign_keys = OFF");
-    db.exec("UPDATE users SET role = 'operator' WHERE role = 'dev_operation'");
     db.exec("DROP TABLE IF EXISTS users_new");
     db.exec(`CREATE TABLE users_new (
       id           INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -46,7 +45,7 @@ try {
       avatar_url   TEXT,
       created_at   TEXT DEFAULT (datetime('now'))
     )`);
-    db.exec("INSERT INTO users_new SELECT id, email, display_name, password, role, avatar_url, created_at FROM users");
+    db.exec("INSERT INTO users_new SELECT id, email, display_name, password, CASE WHEN role='dev_operation' THEN 'operator' ELSE role END, avatar_url, created_at FROM users");
     db.exec("DROP TABLE users");
     db.exec("ALTER TABLE users_new RENAME TO users");
     db.exec("PRAGMA foreign_keys = ON");
