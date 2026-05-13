@@ -4,14 +4,21 @@ const db = require('../../config/db');
 const list = () =>
   db.prepare('SELECT id, email, display_name, role, avatar_url, created_at FROM users ORDER BY created_at ASC').all();
 
+const VALID_ROLES = ['it_manager', 'pmo', 'operator', 'user'];
+
 const create = (email, display_name, password, role, avatar_url) => {
+  if (!VALID_ROLES.includes(role)) return { error: `Invalid role. Must be one of: ${VALID_ROLES.join(', ')}` };
   const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
   if (existing) return { error: 'Email already exists' };
   const hash = bcrypt.hashSync(password, 10);
-  const result = db.prepare(
-    'INSERT INTO users (email, display_name, password, role, avatar_url) VALUES (?, ?, ?, ?, ?)'
-  ).run(email, display_name, hash, role, avatar_url || null);
-  return db.prepare('SELECT id, email, display_name, role, avatar_url, created_at FROM users WHERE id = ?').get(result.lastInsertRowid);
+  try {
+    const result = db.prepare(
+      'INSERT INTO users (email, display_name, password, role, avatar_url) VALUES (?, ?, ?, ?, ?)'
+    ).run(email, display_name, hash, role, avatar_url || null);
+    return db.prepare('SELECT id, email, display_name, role, avatar_url, created_at FROM users WHERE id = ?').get(result.lastInsertRowid);
+  } catch (e) {
+    return { error: e.message };
+  }
 };
 
 const remove = (id) => {
