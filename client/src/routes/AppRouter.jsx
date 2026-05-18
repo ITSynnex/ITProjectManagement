@@ -14,6 +14,7 @@ import SetupHealthPage from '../pages/admin/SetupHealthPage';
 import TaskOverviewTeamPage from '../pages/overview/TaskOverviewTeamPage';
 import TaskOverviewDepartmentPage from '../pages/overview/TaskOverviewDepartmentPage';
 import TaskOverviewBucketPage from '../pages/overview/TaskOverviewBucketPage';
+import SummaryDashboardPage from '../pages/dashboard/SummaryDashboardPage';
 
 const AppRouter = () => (
   <BrowserRouter>
@@ -44,6 +45,7 @@ const AppRouter = () => (
         <Route path="admin/health" element={
           <ProtectedRoute roles={['it_manager', 'pmo']}><SetupHealthPage /></ProtectedRoute>
         } />
+        <Route path="summary"             element={<SummaryDashboardPage />} />
         <Route path="overview/team"       element={<TaskOverviewTeamPage />} />
         <Route path="overview/department" element={<TaskOverviewDepartmentPage />} />
         <Route path="overview/bucket"     element={<TaskOverviewBucketPage />} />

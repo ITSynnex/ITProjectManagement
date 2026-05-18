@@ -3,7 +3,7 @@ import { NavLink, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
   LayoutDashboard, FolderKanban, Users, Settings,
-  ChevronLeft, ChevronRight, UserCircle, Building2, UsersRound, Tag, Heart, BarChart2, Layers,
+  ChevronLeft, ChevronRight, UserCircle, Building2, UsersRound, Tag, Heart, BarChart2, Layers, PieChart,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { getActiveDepartments } from '../../api/departments.api';
@@ -155,6 +155,7 @@ const Sidebar = ({ open, onClose, collapsed, onToggleCollapse }) => {
               <span className="text-[11px] font-semibold uppercase tracking-wider text-[#9CA3AF]">Overview</span>
             </div>
           )}
+          <NavItem to="/summary"             icon={PieChart}  label="Summary"       onClick={onClose} collapsed={collapsed} />
           <NavItem to="/overview/team"       icon={BarChart2} label="By IT Team"    onClick={onClose} collapsed={collapsed} />
           <NavItem to="/overview/department" icon={BarChart2} label="By Department" onClick={onClose} collapsed={collapsed} />
           <NavItem to="/overview/bucket"     icon={Layers}    label="By Bucket"     onClick={onClose} collapsed={collapsed} />
