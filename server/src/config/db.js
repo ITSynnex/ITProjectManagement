@@ -140,6 +140,9 @@ try {
   }
 } catch (e) { console.error('plan_statuses migration error:', e.message); }
 
+// Migration: add bucket column to plan_statuses
+try { db.exec("ALTER TABLE plan_statuses ADD COLUMN bucket TEXT"); } catch (_) {}
+
 // Migration: add health column to plans
 try { db.exec("ALTER TABLE plans ADD COLUMN health TEXT"); } catch (_) {}
 

@@ -13,6 +13,7 @@ const planHealthRoutes    = require('./modules/plan-health/planHealth.routes');
 const plansRoutes         = require('./modules/plans/plans.routes');
 const bucketsRouter     = require('./modules/buckets/buckets.routes');
 const tasksRoutes       = require('./modules/tasks/tasks.routes');
+const taskOverviewRoutes = require('./modules/task-overview/taskOverview.routes');
 const errorHandler      = require('./middleware/errorHandler');
 
 const app = express();
@@ -37,6 +38,8 @@ app.use('/api/plans', plansNested);
 
 // Standalone task routes: /api/tasks/:id
 app.use('/api/tasks', tasksRoutes.standalone);
+
+app.use('/api/task-overview', taskOverviewRoutes);
 
 // Return 404 JSON for unmatched /api/* routes so they don't fall through to the SPA
 app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }));

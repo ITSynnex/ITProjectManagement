@@ -21,7 +21,7 @@ const COLOR_OPTIONS = [
   { value: 'default',     label: 'Default (Gray)', preview: 'bg-gray-100 text-gray-700 ring-gray-200' },
 ];
 
-const empty = { name: '', label: '', color: 'not_started', sort_order: 0 };
+const empty = { name: '', label: '', color: 'not_started', sort_order: 0, bucket: '' };
 
 const Label = ({ children, required }) => (
   <label className="block text-[13px] font-medium text-[#374151] mb-1.5">
@@ -61,7 +61,7 @@ const SetupStatusPage = () => {
 
   const openEdit = (s) => {
     setEditTarget(s);
-    setForm({ name: s.name, label: s.label, color: s.color, sort_order: s.sort_order });
+    setForm({ name: s.name, label: s.label, color: s.color, sort_order: s.sort_order, bucket: s.bucket || '' });
     setFormError('');
     setShowForm(true);
   };
@@ -134,7 +134,7 @@ const SetupStatusPage = () => {
             <table className="w-full">
               <thead>
                 <tr style={{ backgroundColor: '#FAFAF8', borderBottom: '1px solid #E8E6E0' }}>
-                  {['#', 'Key', 'Display Label', 'Color', 'Order', 'Active', 'Created', 'Actions'].map(h => (
+                  {['#', 'Key', 'Display Label', 'Bucket', 'Color', 'Order', 'Active', 'Created', 'Actions'].map(h => (
                     <th key={h} className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-[#9CA3AF]">
                       {h}
                     </th>
@@ -150,6 +150,12 @@ const SetupStatusPage = () => {
                     </td>
                     <td className="px-4 py-3">
                       <Badge variant={s.color}>{s.label}</Badge>
+                    </td>
+                    <td className="px-4 py-3 text-[13px] text-[#6B7280]">
+                      {s.bucket
+                        ? <span className="bg-[#F3F4F6] text-[#374151] px-2 py-0.5 rounded-md text-[12px] font-medium">{s.bucket}</span>
+                        : <span className="text-[#C4C0B8]">—</span>
+                      }
                     </td>
                     <td className="px-4 py-3 text-[13px] text-[#6B7280] capitalize">
                       {COLOR_OPTIONS.find(c => c.value === s.color)?.label ?? s.color}
@@ -216,6 +222,16 @@ const SetupStatusPage = () => {
                 placeholder="e.g. On Hold"
                 className="text-[13px]"
               />
+            </div>
+            <div>
+              <Label>Bucket</Label>
+              <Input
+                value={form.bucket}
+                onChange={e => setForm(f => ({ ...f, bucket: e.target.value }))}
+                placeholder="e.g. In Progress"
+                className="text-[13px]"
+              />
+              <p className="text-[11px] text-[#9CA3AF] mt-1">Group multiple statuses into one bucket for the Overview dashboard.</p>
             </div>
             <div>
               <Label>Color</Label>

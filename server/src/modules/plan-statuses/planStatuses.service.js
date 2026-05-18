@@ -6,18 +6,18 @@ const list = () =>
 const listActive = () =>
   db.prepare('SELECT * FROM plan_statuses WHERE is_active = 1 ORDER BY sort_order ASC, name ASC').all();
 
-const create = ({ name, label, color = 'default', sort_order = 0 }) => {
+const create = ({ name, label, color = 'default', sort_order = 0, bucket }) => {
   if (!name?.trim())  return { error: 'Status name is required' };
   if (!label?.trim()) return { error: 'Status label is required' };
   const existing = db.prepare('SELECT id FROM plan_statuses WHERE LOWER(name) = LOWER(?)').get(name.trim());
   if (existing) return { error: 'Status name already exists' };
   const result = db.prepare(
-    'INSERT INTO plan_statuses (name, label, color, sort_order) VALUES (?, ?, ?, ?)'
-  ).run(name.trim(), label.trim(), color, sort_order);
+    'INSERT INTO plan_statuses (name, label, color, sort_order, bucket) VALUES (?, ?, ?, ?, ?)'
+  ).run(name.trim(), label.trim(), color, sort_order, bucket?.trim() || null);
   return db.prepare('SELECT * FROM plan_statuses WHERE id = ?').get(result.lastInsertRowid);
 };
 
-const update = (id, { name, label, color, sort_order, is_active }) => {
+const update = (id, { name, label, color, sort_order, is_active, bucket }) => {
   const row = db.prepare('SELECT id FROM plan_statuses WHERE id = ?').get(id);
   if (!row) return { error: 'Status not found', status: 404 };
   if (name !== undefined) {
@@ -31,6 +31,7 @@ const update = (id, { name, label, color, sort_order, is_active }) => {
   if (color      !== undefined) { fields.push('color = ?');      values.push(color); }
   if (sort_order !== undefined) { fields.push('sort_order = ?'); values.push(sort_order); }
   if (is_active  !== undefined) { fields.push('is_active = ?');  values.push(is_active ? 1 : 0); }
+  if (bucket     !== undefined) { fields.push('bucket = ?');     values.push(bucket?.trim() || null); }
   if (fields.length) {
     db.prepare(`UPDATE plan_statuses SET ${fields.join(', ')} WHERE id = ?`).run(...values, id);
   }

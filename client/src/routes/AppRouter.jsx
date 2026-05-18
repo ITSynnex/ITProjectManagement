@@ -10,6 +10,8 @@ import DepartmentSetupPage from '../pages/admin/DepartmentSetupPage';
 import SetupTeamPage from '../pages/admin/SetupTeamPage';
 import SetupStatusPage from '../pages/admin/SetupStatusPage';
 import SetupHealthPage from '../pages/admin/SetupHealthPage';
+import TaskOverviewTeamPage from '../pages/overview/TaskOverviewTeamPage';
+import TaskOverviewDepartmentPage from '../pages/overview/TaskOverviewDepartmentPage';
 
 const AppRouter = () => (
   <BrowserRouter>
@@ -37,6 +39,8 @@ const AppRouter = () => (
         <Route path="admin/health" element={
           <ProtectedRoute roles={['it_manager', 'pmo']}><SetupHealthPage /></ProtectedRoute>
         } />
+        <Route path="overview/team"       element={<TaskOverviewTeamPage />} />
+        <Route path="overview/department" element={<TaskOverviewDepartmentPage />} />
         <Route path="*" element={<Navigate to="/plans" replace />} />
       </Route>
     </Routes>
