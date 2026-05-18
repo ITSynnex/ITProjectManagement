@@ -42,6 +42,7 @@ const formatDate = (d) => {
 const TaskOverviewLayout = ({ kpis, matrix, swimlane, buckets = [], groupKey, loading, error }) => {
   const [collapsed, setCollapsed]         = useState(new Set());
   const [selectedGroup, setSelectedGroup] = useState(null);
+  const [selectedBucket, setSelectedBucket] = useState(null);
 
   const toggle = (key) => setCollapsed(prev => {
     const next = new Set(prev);
@@ -58,9 +59,9 @@ const TaskOverviewLayout = ({ kpis, matrix, swimlane, buckets = [], groupKey, lo
   );
 
   // Build ordered bucket list: configured buckets first, then (No Bucket) if any exist
-  const filteredSwimlane = selectedGroup
-    ? (swimlane || []).filter(p => p.group_label === selectedGroup)
-    : (swimlane || []);
+  const filteredSwimlane = (swimlane || [])
+    .filter(p => !selectedGroup  || p.group_label === selectedGroup)
+    .filter(p => !selectedBucket || p.bucket      === selectedBucket);
 
   const bucketNames = buckets.map(b => b.name);
   const noBucket = filteredSwimlane.filter(p => p.bucket === '(No Bucket)');
@@ -84,59 +85,96 @@ const TaskOverviewLayout = ({ kpis, matrix, swimlane, buckets = [], groupKey, lo
 
       {/* KPI cards */}
       <div className="flex flex-wrap gap-3">
-        {/* Total */}
-        <div className="rounded-xl p-4 border flex-1 min-w-[120px]"
-          style={{ backgroundColor: TOTAL_STYLE.bg, borderColor: TOTAL_STYLE.border }}>
+        {/* Total — click to clear bucket filter */}
+        <button
+          onClick={() => setSelectedBucket(null)}
+          className="rounded-xl p-4 border flex-1 min-w-[120px] text-left transition-all duration-150"
+          style={{
+            backgroundColor: TOTAL_STYLE.bg,
+            borderColor: selectedBucket === null ? TOTAL_STYLE.text : TOTAL_STYLE.border,
+            boxShadow: selectedBucket === null ? `0 0 0 2px ${TOTAL_STYLE.text}33` : 'none',
+          }}
+        >
           <p className="text-[11px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: TOTAL_STYLE.text }}>
             Total Projects
           </p>
           <p className="text-2xl font-bold leading-none" style={{ color: TOTAL_STYLE.text }}>
             {kpis?.total ?? 0}
           </p>
-        </div>
+        </button>
         {/* One card per bucket */}
         {buckets.map(b => {
-          const style = getKpiStyle(b.color);
+          const style    = getKpiStyle(b.color);
+          const isActive = selectedBucket === b.name;
           return (
-            <div key={b.name} className="rounded-xl p-4 border flex-1 min-w-[120px]"
-              style={{ backgroundColor: style.bg, borderColor: style.border }}>
+            <button
+              key={b.name}
+              onClick={() => setSelectedBucket(prev => prev === b.name ? null : b.name)}
+              className="rounded-xl p-4 border flex-1 min-w-[120px] text-left transition-all duration-150 cursor-pointer"
+              style={{
+                backgroundColor: style.bg,
+                borderColor: isActive ? style.text : style.border,
+                boxShadow: isActive ? `0 0 0 2px ${style.text}33` : 'none',
+              }}
+            >
               <p className="text-[11px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: style.text }}>
                 {b.name}
               </p>
               <p className="text-2xl font-bold leading-none" style={{ color: style.text }}>
                 {kpis?.[b.name] ?? 0}
               </p>
-            </div>
+            </button>
           );
         })}
         {/* (No Bucket) card if any plans have no bucket */}
-        {(kpis?.['(No Bucket)'] ?? 0) > 0 && (
-          <div className="rounded-xl p-4 border flex-1 min-w-[120px]"
-            style={{ backgroundColor: NO_BUCKET_STYLE.bg, borderColor: NO_BUCKET_STYLE.border }}>
-            <p className="text-[11px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: NO_BUCKET_STYLE.text }}>
-              No Status
-            </p>
-            <p className="text-2xl font-bold leading-none" style={{ color: NO_BUCKET_STYLE.text }}>
-              {kpis['(No Bucket)']}
-            </p>
-          </div>
-        )}
+        {(kpis?.['(No Bucket)'] ?? 0) > 0 && (() => {
+          const isActive = selectedBucket === '(No Bucket)';
+          return (
+            <button
+              onClick={() => setSelectedBucket(prev => prev === '(No Bucket)' ? null : '(No Bucket)')}
+              className="rounded-xl p-4 border flex-1 min-w-[120px] text-left transition-all duration-150 cursor-pointer"
+              style={{
+                backgroundColor: NO_BUCKET_STYLE.bg,
+                borderColor: isActive ? NO_BUCKET_STYLE.text : NO_BUCKET_STYLE.border,
+                boxShadow: isActive ? `0 0 0 2px ${NO_BUCKET_STYLE.text}33` : 'none',
+              }}
+            >
+              <p className="text-[11px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: NO_BUCKET_STYLE.text }}>
+                No Status
+              </p>
+              <p className="text-2xl font-bold leading-none" style={{ color: NO_BUCKET_STYLE.text }}>
+                {kpis['(No Bucket)']}
+              </p>
+            </button>
+          );
+        })()}
       </div>
 
       {/* Matrix table */}
       <div className="bg-white rounded-xl border border-[#E8E6E0] overflow-hidden"
         style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-        <div className="px-4 py-3 border-b border-[#E8E6E0] bg-[#FAFAF8] flex items-center justify-between gap-3">
+        <div className="px-4 py-3 border-b border-[#E8E6E0] bg-[#FAFAF8] flex items-center justify-between gap-3 flex-wrap">
           <h3 className="text-[13px] font-semibold text-[#1A1A1A]">Breakdown by {groupKey}</h3>
-          {selectedGroup && (
-            <button
-              onClick={() => setSelectedGroup(null)}
-              className="flex items-center gap-1.5 text-[12px] font-medium text-[#4F46E5] bg-[#EEF2FF] px-2.5 py-1 rounded-full hover:bg-[#E0E7FF] transition-colors"
-            >
-              {selectedGroup}
-              <X className="w-3 h-3" />
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {selectedBucket && (
+              <button
+                onClick={() => setSelectedBucket(null)}
+                className="flex items-center gap-1.5 text-[12px] font-medium text-[#374151] bg-[#F3F4F6] px-2.5 py-1 rounded-full hover:bg-[#E5E7EB] transition-colors"
+              >
+                {selectedBucket}
+                <X className="w-3 h-3" />
+              </button>
+            )}
+            {selectedGroup && (
+              <button
+                onClick={() => setSelectedGroup(null)}
+                className="flex items-center gap-1.5 text-[12px] font-medium text-[#4F46E5] bg-[#EEF2FF] px-2.5 py-1 rounded-full hover:bg-[#E0E7FF] transition-colors"
+              >
+                {selectedGroup}
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
