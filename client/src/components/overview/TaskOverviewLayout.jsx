@@ -118,7 +118,7 @@ const TaskOverviewLayout = ({ kpis, matrix, swimlane, buckets = [], groupKey, lo
               }}
             >
               <p className="text-[11px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: style.text }}>
-                {b.name}
+                {b.label || b.name}
               </p>
               <p className="text-2xl font-bold leading-none" style={{ color: style.text }}>
                 {kpis?.[b.name] ?? 0}
@@ -185,7 +185,7 @@ const TaskOverviewLayout = ({ kpis, matrix, swimlane, buckets = [], groupKey, lo
                 </th>
                 {matrixBuckets.map(b => (
                   <th key={b} className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-[#9CA3AF] whitespace-nowrap">
-                    {b}
+                    {buckets.find(bk => bk.name === b)?.label || b}
                   </th>
                 ))}
                 <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-[#9CA3AF]">
@@ -264,7 +264,9 @@ const TaskOverviewLayout = ({ kpis, matrix, swimlane, buckets = [], groupKey, lo
                     ? <ChevronRight className="w-4 h-4 text-[#9CA3AF]" />
                     : <ChevronDown  className="w-4 h-4 text-[#9CA3AF]" />
                   }
-                  <span className={`text-[13px] font-semibold ${textColor}`}>{name}</span>
+                  <span className={`text-[13px] font-semibold ${textColor}`}>
+                    {buckets.find(b => b.name === name)?.label || name}
+                  </span>
                   <span className="text-[11px] text-[#9CA3AF] bg-[#F3F4F6] px-1.5 py-0.5 rounded-full">
                     {plans.length} project{plans.length !== 1 ? 's' : ''}
                   </span>

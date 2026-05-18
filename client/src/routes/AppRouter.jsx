@@ -9,9 +9,11 @@ import SetupOperatorPage from '../pages/admin/SetupOperatorPage';
 import DepartmentSetupPage from '../pages/admin/DepartmentSetupPage';
 import SetupTeamPage from '../pages/admin/SetupTeamPage';
 import SetupStatusPage from '../pages/admin/SetupStatusPage';
+import SetupBucketPage from '../pages/admin/SetupBucketPage';
 import SetupHealthPage from '../pages/admin/SetupHealthPage';
 import TaskOverviewTeamPage from '../pages/overview/TaskOverviewTeamPage';
 import TaskOverviewDepartmentPage from '../pages/overview/TaskOverviewDepartmentPage';
+import TaskOverviewBucketPage from '../pages/overview/TaskOverviewBucketPage';
 
 const AppRouter = () => (
   <BrowserRouter>
@@ -36,11 +38,15 @@ const AppRouter = () => (
         <Route path="admin/statuses" element={
           <ProtectedRoute roles={['it_manager', 'pmo']}><SetupStatusPage /></ProtectedRoute>
         } />
+        <Route path="admin/buckets" element={
+          <ProtectedRoute roles={['it_manager', 'pmo']}><SetupBucketPage /></ProtectedRoute>
+        } />
         <Route path="admin/health" element={
           <ProtectedRoute roles={['it_manager', 'pmo']}><SetupHealthPage /></ProtectedRoute>
         } />
         <Route path="overview/team"       element={<TaskOverviewTeamPage />} />
         <Route path="overview/department" element={<TaskOverviewDepartmentPage />} />
+        <Route path="overview/bucket"     element={<TaskOverviewBucketPage />} />
         <Route path="*" element={<Navigate to="/plans" replace />} />
       </Route>
     </Routes>

@@ -1,6 +1,5 @@
 const db = require('../../config/db');
 
-// Aggregate task counts per plan
 const TASK_AGG_CTE = `
   WITH task_agg AS (
     SELECT
@@ -15,18 +14,22 @@ const TASK_AGG_CTE = `
   )
 `;
 
-// Ordered list of distinct buckets (for column order in matrix + KPI)
-const getBuckets = () =>
+// Status sections for By Team / By Department views
+const getStatusSections = () =>
   db.prepare(`
-    SELECT bucket AS name, MAX(color) AS color
-    FROM plan_statuses
-    WHERE bucket IS NOT NULL AND bucket != '' AND is_active = 1
-    GROUP BY bucket
-    ORDER BY MIN(sort_order) ASC
+    SELECT name, label, color FROM plan_statuses
+    WHERE is_active = 1 ORDER BY sort_order ASC, name ASC
+  `).all();
+
+// Bucket sections for By Bucket view
+const getBucketSections = () =>
+  db.prepare(`
+    SELECT name, color FROM plan_buckets
+    WHERE is_active = 1 ORDER BY sort_order ASC, id ASC
   `).all();
 
 // Pivot flat rows [{group_label, bucket, count}] into [{group_label, [bucket]: count, total}]
-const pivotMatrix = (rows, buckets) => {
+const pivotMatrix = (rows) => {
   const map = {};
   rows.forEach(r => {
     if (!map[r.group_label]) {
@@ -43,43 +46,39 @@ const pivotMatrix = (rows, buckets) => {
 };
 
 const getByTeam = () => {
-  const buckets = getBuckets();
+  const buckets = getStatusSections();
 
   const total = db.prepare('SELECT COUNT(*) AS c FROM plans').get().c;
 
   const kpiRows = db.prepare(`
-    SELECT COALESCE(ps.bucket, '(No Bucket)') AS bucket, COUNT(p.id) AS count
-    FROM plans p
-    LEFT JOIN plan_statuses ps ON ps.name = p.status
-    GROUP BY COALESCE(ps.bucket, '(No Bucket)')
+    SELECT COALESCE(p.status, '(No Bucket)') AS bucket, COUNT(*) AS count
+    FROM plans p GROUP BY COALESCE(p.status, '(No Bucket)')
   `).all();
   const kpis = { total };
   kpiRows.forEach(r => { kpis[r.bucket] = r.count; });
 
   const matrixRaw = db.prepare(`
     SELECT
-      COALESCE(p.team, '(No Team)')            AS group_label,
-      COALESCE(ps.bucket, '(No Bucket)')       AS bucket,
-      COUNT(p.id)                              AS count
+      COALESCE(p.team, '(No Team)')          AS group_label,
+      COALESCE(p.status, '(No Bucket)')      AS bucket,
+      COUNT(*)                               AS count
     FROM plans p
-    LEFT JOIN plan_statuses ps ON ps.name = p.status
-    GROUP BY COALESCE(p.team, '(No Team)'), COALESCE(ps.bucket, '(No Bucket)')
+    GROUP BY COALESCE(p.team, '(No Team)'), COALESCE(p.status, '(No Bucket)')
   `).all();
-  const matrix = pivotMatrix(matrixRaw, buckets);
+  const matrix = pivotMatrix(matrixRaw);
 
   const swimlane = db.prepare(`
     ${TASK_AGG_CTE}
     SELECT
-      p.id                                     AS plan_id,
-      p.name                                   AS plan_name,
-      COALESCE(p.team, '(No Team)')            AS group_label,
+      p.id                                   AS plan_id,
+      p.name                                 AS plan_name,
+      COALESCE(p.team, '(No Team)')          AS group_label,
       p.end_date,
-      COALESCE(ta.total_tasks,   0)            AS total_tasks,
-      COALESCE(ta.delayed_tasks, 0)            AS delayed_tasks,
-      COALESCE(ps.bucket, '(No Bucket)')       AS bucket
+      COALESCE(ta.total_tasks,   0)          AS total_tasks,
+      COALESCE(ta.delayed_tasks, 0)          AS delayed_tasks,
+      COALESCE(p.status, '(No Bucket)')      AS bucket
     FROM plans p
-    LEFT JOIN plan_statuses ps ON ps.name = p.status
-    LEFT JOIN task_agg ta      ON ta.plan_id = p.id
+    LEFT JOIN task_agg ta ON ta.plan_id = p.id
     ORDER BY CASE WHEN p.end_date IS NULL THEN 1 ELSE 0 END, p.end_date ASC
   `).all();
 
@@ -87,49 +86,91 @@ const getByTeam = () => {
 };
 
 const getByDepartment = () => {
-  const buckets = getBuckets();
+  const buckets = getStatusSections();
 
   const total = db.prepare('SELECT COUNT(*) AS c FROM plans').get().c;
 
   const kpiRows = db.prepare(`
-    SELECT COALESCE(ps.bucket, '(No Bucket)') AS bucket, COUNT(p.id) AS count
-    FROM plans p
-    LEFT JOIN plan_statuses ps ON ps.name = p.status
-    GROUP BY COALESCE(ps.bucket, '(No Bucket)')
+    SELECT COALESCE(p.status, '(No Bucket)') AS bucket, COUNT(*) AS count
+    FROM plans p GROUP BY COALESCE(p.status, '(No Bucket)')
   `).all();
   const kpis = { total };
   kpiRows.forEach(r => { kpis[r.bucket] = r.count; });
 
   const matrixRaw = db.prepare(`
     SELECT
-      COALESCE(d.name, '(No Department)')      AS group_label,
-      COALESCE(ps.bucket, '(No Bucket)')       AS bucket,
-      COUNT(p.id)                              AS count
+      COALESCE(d.name, '(No Department)')    AS group_label,
+      COALESCE(p.status, '(No Bucket)')      AS bucket,
+      COUNT(p.id)                            AS count
     FROM plans p
-    LEFT JOIN departments    d  ON d.id    = p.department_id
-    LEFT JOIN plan_statuses  ps ON ps.name = p.status
-    GROUP BY COALESCE(d.name, '(No Department)'), COALESCE(ps.bucket, '(No Bucket)')
+    LEFT JOIN departments d ON d.id = p.department_id
+    GROUP BY COALESCE(d.name, '(No Department)'), COALESCE(p.status, '(No Bucket)')
   `).all();
-  const matrix = pivotMatrix(matrixRaw, buckets);
+  const matrix = pivotMatrix(matrixRaw);
 
   const swimlane = db.prepare(`
     ${TASK_AGG_CTE}
     SELECT
-      p.id                                        AS plan_id,
-      p.name                                      AS plan_name,
-      COALESCE(d.name, '(No Department)')         AS group_label,
+      p.id                                      AS plan_id,
+      p.name                                    AS plan_name,
+      COALESCE(d.name, '(No Department)')       AS group_label,
       p.end_date,
-      COALESCE(ta.total_tasks,   0)               AS total_tasks,
-      COALESCE(ta.delayed_tasks, 0)               AS delayed_tasks,
-      COALESCE(ps.bucket, '(No Bucket)')          AS bucket
+      COALESCE(ta.total_tasks,   0)             AS total_tasks,
+      COALESCE(ta.delayed_tasks, 0)             AS delayed_tasks,
+      COALESCE(p.status, '(No Bucket)')         AS bucket
     FROM plans p
-    LEFT JOIN departments    d  ON d.id    = p.department_id
-    LEFT JOIN plan_statuses  ps ON ps.name = p.status
-    LEFT JOIN task_agg       ta ON ta.plan_id = p.id
+    LEFT JOIN departments d ON d.id = p.department_id
+    LEFT JOIN task_agg ta  ON ta.plan_id = p.id
     ORDER BY CASE WHEN p.end_date IS NULL THEN 1 ELSE 0 END, p.end_date ASC
   `).all();
 
   return { buckets, kpis, matrix, swimlane };
 };
 
-module.exports = { getByTeam, getByDepartment };
+const getByBucket = () => {
+  const buckets = getBucketSections();
+
+  const total = db.prepare('SELECT COUNT(*) AS c FROM plans').get().c;
+
+  const kpiRows = db.prepare(`
+    SELECT COALESCE(pb.name, '(No Bucket)') AS bucket, COUNT(p.id) AS count
+    FROM plans p
+    LEFT JOIN plan_buckets pb ON pb.id = p.bucket_id
+    GROUP BY COALESCE(pb.name, '(No Bucket)')
+  `).all();
+  const kpis = { total };
+  kpiRows.forEach(r => { kpis[r.bucket] = r.count; });
+
+  const matrixRaw = db.prepare(`
+    SELECT
+      COALESCE(d.name, '(No Department)')    AS group_label,
+      COALESCE(pb.name, '(No Bucket)')       AS bucket,
+      COUNT(p.id)                            AS count
+    FROM plans p
+    LEFT JOIN departments    d  ON d.id    = p.department_id
+    LEFT JOIN plan_buckets   pb ON pb.id   = p.bucket_id
+    GROUP BY COALESCE(d.name, '(No Department)'), COALESCE(pb.name, '(No Bucket)')
+  `).all();
+  const matrix = pivotMatrix(matrixRaw);
+
+  const swimlane = db.prepare(`
+    ${TASK_AGG_CTE}
+    SELECT
+      p.id                                      AS plan_id,
+      p.name                                    AS plan_name,
+      COALESCE(d.name, '(No Department)')       AS group_label,
+      p.end_date,
+      COALESCE(ta.total_tasks,   0)             AS total_tasks,
+      COALESCE(ta.delayed_tasks, 0)             AS delayed_tasks,
+      COALESCE(pb.name, '(No Bucket)')          AS bucket
+    FROM plans p
+    LEFT JOIN departments  d  ON d.id    = p.department_id
+    LEFT JOIN plan_buckets pb ON pb.id   = p.bucket_id
+    LEFT JOIN task_agg     ta ON ta.plan_id = p.id
+    ORDER BY CASE WHEN p.end_date IS NULL THEN 1 ELSE 0 END, p.end_date ASC
+  `).all();
+
+  return { buckets, kpis, matrix, swimlane };
+};
+
+module.exports = { getByTeam, getByDepartment, getByBucket };

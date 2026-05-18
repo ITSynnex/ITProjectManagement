@@ -6,6 +6,7 @@ import { cn } from '../../lib/utils';
 import { getActiveTeams } from '../../api/teams.api';
 import { getActivePlanStatuses } from '../../api/planStatuses.api';
 import { getActivePlanHealth } from '../../api/planHealth.api';
+import { getActivePlanBuckets } from '../../api/planBuckets.api';
 
 const PRIORITIES = [
   { value: 'low',      label: 'Low',      active: 'bg-blue-50 text-blue-700 border-blue-400',   dot: 'bg-blue-400' },
@@ -14,7 +15,7 @@ const PRIORITIES = [
   { value: 'critical', label: 'Critical', active: 'bg-red-50 text-red-700 border-red-500',      dot: 'bg-red-500' },
 ];
 
-const empty = { name: '', team: '', operator_id: '', start_date: '', end_date: '', status: '', health: '', department_id: '', priority: '' };
+const empty = { name: '', team: '', operator_id: '', start_date: '', end_date: '', status: '', health: '', department_id: '', priority: '', bucket_id: '' };
 
 const Label = ({ children, required }) => (
   <label className="block text-[13px] font-medium text-[#374151] mb-1.5">
@@ -26,14 +27,16 @@ const PlanForm = ({ open, onClose, onSave, initial, operators = [], departments 
   const [form, setForm]     = useState(empty);
   const [error, setError]   = useState('');
   const [saving, setSaving] = useState(false);
-  const [teams, setTeams]     = useState([]);
+  const [teams, setTeams]       = useState([]);
   const [statuses, setStatuses] = useState([]);
   const [healths, setHealths]   = useState([]);
+  const [buckets, setBuckets]   = useState([]);
 
   useEffect(() => {
     getActiveTeams().then(r => setTeams(r.data)).catch(() => {});
     getActivePlanStatuses().then(r => setStatuses(r.data)).catch(() => {});
     getActivePlanHealth().then(r => setHealths(r.data)).catch(() => {});
+    getActivePlanBuckets().then(r => setBuckets(r.data)).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -47,6 +50,7 @@ const PlanForm = ({ open, onClose, onSave, initial, operators = [], departments 
       health:        initial.health        ?? '',
       department_id: initial.department_id ?? '',
       priority:      initial.priority      ?? '',
+      bucket_id:     initial.bucket_id     ?? '',
     } : empty);
     setError('');
   }, [open, initial]);
@@ -67,7 +71,8 @@ const PlanForm = ({ open, onClose, onSave, initial, operators = [], departments 
         status:        form.status        || null,
         health:        form.health        || null,
         department_id: form.department_id ? Number(form.department_id) : undefined,
-        priority:      form.priority || null,
+        priority:      form.priority      || null,
+        bucket_id:     form.bucket_id     ? Number(form.bucket_id)     : null,
       });
       onClose();
     } catch (err) {
@@ -166,6 +171,14 @@ const PlanForm = ({ open, onClose, onSave, initial, operators = [], departments 
               {healths.map(h => <option key={h.name} value={h.name}>{h.label}</option>)}
             </select>
           </div>
+        </div>
+
+        <div>
+          <Label>Bucket</Label>
+          <select value={form.bucket_id} onChange={set('bucket_id')} className={selectClass}>
+            <option value="">— No bucket —</option>
+            {buckets.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+          </select>
         </div>
 
         <div className="flex justify-end gap-3 pt-2">

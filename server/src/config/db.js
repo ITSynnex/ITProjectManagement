@@ -140,8 +140,41 @@ try {
   }
 } catch (e) { console.error('plan_statuses migration error:', e.message); }
 
-// Migration: add bucket column to plan_statuses
+// Migration: add bucket column to plan_statuses (legacy — will be dropped below)
 try { db.exec("ALTER TABLE plan_statuses ADD COLUMN bucket TEXT"); } catch (_) {}
+
+// Migration: create plan_buckets table and seed if empty
+try {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS plan_buckets (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      name       TEXT NOT NULL UNIQUE,
+      color      TEXT NOT NULL DEFAULT 'default',
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      is_active  INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT DEFAULT (datetime('now'))
+    )
+  `);
+  const count = db.prepare('SELECT COUNT(*) as n FROM plan_buckets').get();
+  if (count.n === 0) {
+    const ins = db.prepare('INSERT OR IGNORE INTO plan_buckets (name, color, sort_order) VALUES (?, ?, ?)');
+    [
+      ['OnQueue',        'not_started', 1],
+      ['GetRequirement', 'ongoing',     2],
+      ['Develop',        'in_progress', 3],
+      ['UAT',            'at_risk',     4],
+      ['GOLIVE',         'on_track',    5],
+    ].forEach(row => ins.run(...row));
+  }
+} catch (e) { console.error('plan_buckets migration error:', e.message); }
+
+// Migration: add bucket_id to plans
+try { db.exec("ALTER TABLE plans ADD COLUMN bucket_id INTEGER REFERENCES plan_buckets(id)"); } catch (_) {}
+
+// Migration: drop bucket column from plan_statuses (SQLite 3.35+)
+try {
+  db.exec("ALTER TABLE plan_statuses DROP COLUMN bucket");
+} catch (_) { /* older SQLite — column stays but is ignored */ }
 
 // Migration: add health column to plans
 try { db.exec("ALTER TABLE plans ADD COLUMN health TEXT"); } catch (_) {}

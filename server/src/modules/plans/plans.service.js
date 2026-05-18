@@ -12,7 +12,8 @@ const COLS = `
   p.*, u.display_name as owner_name, u.avatar_url as owner_avatar,
   d.name as department_name,
   op.name as operator_name,
-  tm.color as team_color
+  tm.color as team_color,
+  pb.name as bucket_name
 `;
 
 const FROM_JOINS = `
@@ -21,6 +22,7 @@ const FROM_JOINS = `
   LEFT JOIN departments d ON d.id = p.department_id
   LEFT JOIN operators op ON op.id = p.operator_id
   LEFT JOIN teams tm ON tm.name = p.team
+  LEFT JOIN plan_buckets pb ON pb.id = p.bucket_id
 `;
 
 const list = () =>
@@ -47,18 +49,18 @@ const getById = (id) => {
 };
 
 const create = (data, userId) => {
-  const { name, team, start_date, end_date, status, health, owner_id, department_id, operator_id, priority } = data;
+  const { name, team, start_date, end_date, status, health, owner_id, department_id, operator_id, priority, bucket_id } = data;
   const resolvedOwner = owner_id || userId;
   const result = db.prepare(
-    'INSERT INTO plans (name, team, owner_id, start_date, end_date, status, health, department_id, operator_id, priority) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-  ).run(name, team || null, resolvedOwner, start_date || null, end_date || null, status || null, health || null, department_id || null, operator_id || null, priority || null);
+    'INSERT INTO plans (name, team, owner_id, start_date, end_date, status, health, department_id, operator_id, priority, bucket_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+  ).run(name, team || null, resolvedOwner, start_date || null, end_date || null, status || null, health || null, department_id || null, operator_id || null, priority || null, bucket_id || null);
   return db.prepare(`SELECT ${COLS} ${FROM_JOINS} WHERE p.id = ?`).get(result.lastInsertRowid);
 };
 
 const update = (id, data) => {
   const plan = db.prepare('SELECT id FROM plans WHERE id = ?').get(id);
   if (!plan) return null;
-  const fields = ['name','team','owner_id','progress','start_date','end_date','status','health','department_id','operator_id','priority'].filter(f => data[f] !== undefined);
+  const fields = ['name','team','owner_id','progress','start_date','end_date','status','health','department_id','operator_id','priority','bucket_id'].filter(f => data[f] !== undefined);
   if (fields.length) {
     const sql = `UPDATE plans SET ${fields.map(f => `${f} = ?`).join(', ')} WHERE id = ?`;
     db.prepare(sql).run(...fields.map(f => data[f]), id);

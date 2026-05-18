@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getPlanStatuses, createPlanStatus, updatePlanStatus, deletePlanStatus } from '../../api/planStatuses.api';
+import { getPlanBuckets, createPlanBucket, updatePlanBucket, deletePlanBucket } from '../../api/planBuckets.api';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import Modal from '../../components/common/Modal';
@@ -8,20 +8,20 @@ import Spinner from '../../components/common/Spinner';
 import { Badge } from '../../components/ui/badge';
 import { formatDate } from '../../utils/formatDate';
 import { useAuth } from '../../context/AuthContext';
-import { Plus, Pencil, Trash2, Tag } from 'lucide-react';
+import { Plus, Pencil, Trash2, Layers } from 'lucide-react';
 
 const COLOR_OPTIONS = [
-  { value: 'not_started', label: 'Gray',   preview: 'bg-gray-100 text-gray-600 ring-gray-200' },
-  { value: 'ongoing',     label: 'Indigo', preview: 'bg-indigo-50 text-indigo-700 ring-indigo-200' },
-  { value: 'on_track',    label: 'Green',  preview: 'bg-green-50 text-green-700 ring-green-200' },
-  { value: 'at_risk',     label: 'Red',    preview: 'bg-red-50 text-red-700 ring-red-200' },
-  { value: 'suspended',   label: 'Orange', preview: 'bg-orange-50 text-orange-700 ring-orange-200' },
-  { value: 'closed',      label: 'Blue',   preview: 'bg-blue-50 text-blue-700 ring-blue-200' },
-  { value: 'in_progress', label: 'Yellow', preview: 'bg-yellow-50 text-yellow-700 ring-yellow-200' },
-  { value: 'default',     label: 'Default (Gray)', preview: 'bg-gray-100 text-gray-700 ring-gray-200' },
+  { value: 'not_started', label: 'Gray' },
+  { value: 'ongoing',     label: 'Indigo' },
+  { value: 'on_track',    label: 'Green' },
+  { value: 'at_risk',     label: 'Red' },
+  { value: 'suspended',   label: 'Orange' },
+  { value: 'closed',      label: 'Blue' },
+  { value: 'in_progress', label: 'Yellow' },
+  { value: 'default',     label: 'Default (Gray)' },
 ];
 
-const empty = { name: '', label: '', color: 'not_started', sort_order: 0 };
+const empty = { name: '', color: 'not_started', sort_order: 0 };
 
 const Label = ({ children, required }) => (
   <label className="block text-[13px] font-medium text-[#374151] mb-1.5">
@@ -29,56 +29,55 @@ const Label = ({ children, required }) => (
   </label>
 );
 
-const SetupStatusPage = () => {
+const SetupBucketPage = () => {
   const { user } = useAuth();
-  const [statuses, setStatuses]         = useState([]);
-  const [loading, setLoading]           = useState(true);
-  const [error, setError]               = useState('');
-  const [showForm, setShowForm]         = useState(false);
-  const [editTarget, setEditTarget]     = useState(null);
+  const [buckets, setBuckets]         = useState([]);
+  const [loading, setLoading]         = useState(true);
+  const [error, setError]             = useState('');
+  const [showForm, setShowForm]       = useState(false);
+  const [editTarget, setEditTarget]   = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
-  const [form, setForm]                 = useState(empty);
-  const [formError, setFormError]       = useState('');
-  const [saving, setSaving]             = useState(false);
+  const [form, setForm]               = useState(empty);
+  const [formError, setFormError]     = useState('');
+  const [saving, setSaving]           = useState(false);
 
   const canEdit = user?.role === 'it_manager' || user?.role === 'pmo';
 
   const selectClass = 'w-full rounded-md border border-[#E8E6E0] bg-white px-3 py-2 text-[13px] text-[#1A1A1A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:border-transparent';
 
   useEffect(() => {
-    getPlanStatuses()
-      .then(r => setStatuses(r.data))
-      .catch(() => setError('Failed to load statuses.'))
+    getPlanBuckets()
+      .then(r => setBuckets(r.data))
+      .catch(() => setError('Failed to load buckets.'))
       .finally(() => setLoading(false));
   }, []);
 
   const openNew = () => {
     setEditTarget(null);
-    setForm({ ...empty, sort_order: statuses.length + 1 });
+    setForm({ ...empty, sort_order: buckets.length + 1 });
     setFormError('');
     setShowForm(true);
   };
 
-  const openEdit = (s) => {
-    setEditTarget(s);
-    setForm({ name: s.name, label: s.label, color: s.color, sort_order: s.sort_order });
+  const openEdit = (b) => {
+    setEditTarget(b);
+    setForm({ name: b.name, color: b.color, sort_order: b.sort_order });
     setFormError('');
     setShowForm(true);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.name.trim())  return setFormError('Status key is required');
-    if (!form.label.trim()) return setFormError('Display label is required');
+    if (!form.name.trim()) return setFormError('Bucket name is required');
     setSaving(true);
     setFormError('');
     try {
       if (editTarget) {
-        const r = await updatePlanStatus(editTarget.id, form);
-        setStatuses(prev => prev.map(s => s.id === editTarget.id ? r.data : s));
+        const r = await updatePlanBucket(editTarget.id, form);
+        setBuckets(prev => prev.map(b => b.id === editTarget.id ? r.data : b));
       } else {
-        const r = await createPlanStatus(form);
-        setStatuses(prev => [...prev, r.data].sort((a, b) => a.sort_order - b.sort_order));
+        const r = await createPlanBucket(form);
+        setBuckets(prev => [...prev, r.data].sort((a, b) => a.sort_order - b.sort_order));
       }
       setShowForm(false);
     } catch (err) {
@@ -90,10 +89,10 @@ const SetupStatusPage = () => {
 
   const handleDelete = async () => {
     try {
-      await deletePlanStatus(deleteTarget.id);
-      setStatuses(prev => prev.filter(s => s.id !== deleteTarget.id));
+      await deletePlanBucket(deleteTarget.id);
+      setBuckets(prev => prev.filter(b => b.id !== deleteTarget.id));
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to delete status.');
+      setError(err.response?.data?.error || 'Failed to delete bucket.');
     } finally {
       setDeleteTarget(null);
     }
@@ -106,16 +105,16 @@ const SetupStatusPage = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center">
-              <Tag className="w-4 h-4 text-indigo-500" />
+              <Layers className="w-4 h-4 text-indigo-500" />
             </div>
             <div>
-              <h1 className="text-2xl font-semibold text-[#1A1A1A]">Status Management</h1>
-              <p className="text-[13px] text-[#6B7280] mt-0.5">Manage project status values</p>
+              <h1 className="text-2xl font-semibold text-[#1A1A1A]">Bucket Management</h1>
+              <p className="text-[13px] text-[#6B7280] mt-0.5">Manage project workflow buckets</p>
             </div>
           </div>
           {canEdit && (
             <Button variant="default" size="sm" onClick={openNew}>
-              <Plus className="w-3.5 h-3.5 mr-1.5" /> New Status
+              <Plus className="w-3.5 h-3.5 mr-1.5" /> New Bucket
             </Button>
           )}
         </div>
@@ -134,7 +133,7 @@ const SetupStatusPage = () => {
             <table className="w-full">
               <thead>
                 <tr style={{ backgroundColor: '#FAFAF8', borderBottom: '1px solid #E8E6E0' }}>
-                  {['#', 'Key', 'Display Label', 'Color', 'Order', 'Active', 'Created', 'Actions'].map(h => (
+                  {['#', 'Name', 'Color', 'Order', 'Active', 'Created', 'Actions'].map(h => (
                     <th key={h} className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-[#9CA3AF]">
                       {h}
                     </th>
@@ -142,34 +141,31 @@ const SetupStatusPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {statuses.map((s, idx) => (
-                  <tr key={s.id} className="group border-b border-[#E8E6E0] last:border-0 hover:bg-[#FAFAF8] transition-colors">
+                {buckets.map((b, idx) => (
+                  <tr key={b.id} className="group border-b border-[#E8E6E0] last:border-0 hover:bg-[#FAFAF8] transition-colors">
                     <td className="px-4 py-3 text-[12px] text-[#9CA3AF]">{idx + 1}</td>
                     <td className="px-4 py-3">
-                      <span className="text-[12px] font-mono text-[#6B7280] bg-[#F3F4F6] px-1.5 py-0.5 rounded">{s.name}</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge variant={s.color}>{s.label}</Badge>
+                      <Badge variant={b.color}>{b.name}</Badge>
                     </td>
                     <td className="px-4 py-3 text-[13px] text-[#6B7280] capitalize">
-                      {COLOR_OPTIONS.find(c => c.value === s.color)?.label ?? s.color}
+                      {COLOR_OPTIONS.find(c => c.value === b.color)?.label ?? b.color}
                     </td>
-                    <td className="px-4 py-3 text-[13px] text-[#6B7280]">{s.sort_order}</td>
+                    <td className="px-4 py-3 text-[13px] text-[#6B7280]">{b.sort_order}</td>
                     <td className="px-4 py-3">
-                      <Badge variant={s.is_active ? 'on_track' : 'default'}>
-                        {s.is_active ? 'Active' : 'Inactive'}
+                      <Badge variant={b.is_active ? 'on_track' : 'default'}>
+                        {b.is_active ? 'Active' : 'Inactive'}
                       </Badge>
                     </td>
-                    <td className="px-4 py-3 text-[13px] text-[#6B7280]">{formatDate(s.created_at)}</td>
+                    <td className="px-4 py-3 text-[13px] text-[#6B7280]">{formatDate(b.created_at)}</td>
                     <td className="px-4 py-3">
                       {canEdit && (
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => openEdit(s)}
+                          <button onClick={() => openEdit(b)}
                             className="p-1.5 rounded-lg text-[#9CA3AF] hover:text-[#4F46E5] hover:bg-[#EEF2FF] transition-colors"
                             title="Edit">
                             <Pencil className="w-3.5 h-3.5" />
                           </button>
-                          <button onClick={() => setDeleteTarget(s)}
+                          <button onClick={() => setDeleteTarget(b)}
                             className="p-1.5 rounded-lg text-[#9CA3AF] hover:text-red-600 hover:bg-red-50 transition-colors"
                             title="Delete">
                             <Trash2 className="w-3.5 h-3.5" />
@@ -181,9 +177,9 @@ const SetupStatusPage = () => {
                 ))}
               </tbody>
             </table>
-            {statuses.length === 0 && (
+            {buckets.length === 0 && (
               <div className="text-center py-10 text-[13px] text-[#9CA3AF]">
-                No statuses yet. {canEdit && 'Create your first status.'}
+                No buckets yet. {canEdit && 'Create your first bucket.'}
               </div>
             )}
           </div>
@@ -191,31 +187,22 @@ const SetupStatusPage = () => {
       </div>
 
       {showForm && (
-        <Modal open={showForm} onClose={() => setShowForm(false)} title={editTarget ? 'Edit Status' : 'New Status'}>
+        <Modal open={showForm} onClose={() => setShowForm(false)} title={editTarget ? 'Edit Bucket' : 'New Bucket'}>
           <form onSubmit={handleSubmit} className="space-y-4">
             {formError && (
               <p className="text-[13px] text-red-700 bg-red-50 border border-red-200 px-3 py-2.5 rounded-lg">{formError}</p>
             )}
             <div>
-              <Label required>Status Key</Label>
+              <Label required>Bucket Name</Label>
               <Input
                 value={form.name}
-                onChange={e => setForm(f => ({ ...f, name: e.target.value.toLowerCase().replace(/\s+/g, '_') }))}
-                placeholder="e.g. on_hold"
-                className="text-[13px] font-mono"
+                onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                placeholder="e.g. UAT"
+                className="text-[13px]"
                 autoFocus
                 disabled={!!editTarget}
               />
-              <p className="text-[11px] text-[#9CA3AF] mt-1">Lowercase with underscores. Cannot be changed after creation.</p>
-            </div>
-            <div>
-              <Label required>Display Label</Label>
-              <Input
-                value={form.label}
-                onChange={e => setForm(f => ({ ...f, label: e.target.value }))}
-                placeholder="e.g. On Hold"
-                className="text-[13px]"
-              />
+              <p className="text-[11px] text-[#9CA3AF] mt-1">Cannot be changed after creation.</p>
             </div>
             <div>
               <Label>Color</Label>
@@ -228,9 +215,9 @@ const SetupStatusPage = () => {
                   <option key={c.value} value={c.value}>{c.label}</option>
                 ))}
               </select>
-              {form.label && (
+              {form.name && (
                 <div className="mt-2">
-                  <Badge variant={form.color}>{form.label || 'Preview'}</Badge>
+                  <Badge variant={form.color}>{form.name || 'Preview'}</Badge>
                 </div>
               )}
             </div>
@@ -269,7 +256,7 @@ const SetupStatusPage = () => {
 
       {deleteTarget && (
         <ConfirmDialog
-          message={`Delete status "${deleteTarget.label}"? This cannot be undone.`}
+          message={`Delete bucket "${deleteTarget.name}"? This cannot be undone.`}
           onConfirm={handleDelete}
           onCancel={() => setDeleteTarget(null)}
         />
@@ -278,4 +265,4 @@ const SetupStatusPage = () => {
   );
 };
 
-export default SetupStatusPage;
+export default SetupBucketPage;

@@ -3,7 +3,7 @@ import { NavLink, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
   LayoutDashboard, FolderKanban, Users, Settings,
-  ChevronLeft, ChevronRight, UserCircle, Building2, UsersRound, Tag, Heart, BarChart2,
+  ChevronLeft, ChevronRight, UserCircle, Building2, UsersRound, Tag, Heart, BarChart2, Layers,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { getActiveDepartments } from '../../api/departments.api';
@@ -140,6 +140,9 @@ const Sidebar = ({ open, onClose, collapsed, onToggleCollapse }) => {
             <NavItem to="/admin/statuses" icon={Tag} label="Status" onClick={onClose} collapsed={collapsed} />
           )}
           {(user?.role === 'it_manager' || user?.role === 'pmo') && (
+            <NavItem to="/admin/buckets" icon={Layers} label="Buckets" onClick={onClose} collapsed={collapsed} />
+          )}
+          {(user?.role === 'it_manager' || user?.role === 'pmo') && (
             <NavItem to="/admin/health" icon={Heart} label="Health" onClick={onClose} collapsed={collapsed} />
           )}
 
@@ -154,6 +157,7 @@ const Sidebar = ({ open, onClose, collapsed, onToggleCollapse }) => {
           )}
           <NavItem to="/overview/team"       icon={BarChart2} label="By IT Team"    onClick={onClose} collapsed={collapsed} />
           <NavItem to="/overview/department" icon={BarChart2} label="By Department" onClick={onClose} collapsed={collapsed} />
+          <NavItem to="/overview/bucket"     icon={Layers}    label="By Bucket"     onClick={onClose} collapsed={collapsed} />
 
           {/* Separator */}
           <div className="my-2 border-t border-[#E8E6E0]" />
